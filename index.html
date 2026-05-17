@@ -10,7 +10,7 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-analytics.js";
     import { getAuth, signInWithPopup, GoogleAuthProvider, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-    import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, doc, setDoc, getDoc, updateDoc, arrayUnion, arrayRemove, where, getDocs, serverTimestamp, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, doc, setDoc, getDoc, updateDoc, arrayUnion, arrayRemove, where, getDocs, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
     
     const firebaseConfig = {
       apiKey: "AIzaSyBxWhSwY0CnzNJDpDv3t93r-ES87VNpHNA",
@@ -28,48 +28,162 @@
     const db = getFirestore(app);
     const googleProvider = new GoogleAuthProvider();
 
-    window.firebaseApp = { app, auth, db, googleProvider, signInWithPopup, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, collection, addDoc, query, orderBy, onSnapshot, doc, setDoc, getDoc, updateDoc, arrayUnion, arrayRemove, where, getDocs, serverTimestamp, deleteDoc };
+    window.firebaseApp = { app, auth, db, googleProvider, signInWithPopup, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, collection, addDoc, query, orderBy, onSnapshot, doc, setDoc, getDoc, updateDoc, arrayUnion, arrayRemove, where, getDocs, serverTimestamp };
   </script>
   
   <style id="theme-styles">
-    * { margin: 0; padding: 0; box-sizing: border-box; transition: background-color 0.3s, border-color 0.3s, border-radius 0.2s; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
     
-    /* Светлая тема (по умолчанию) */
+    /* ========== АНИМАЦИИ ========== */
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    @keyframes fadeInScale {
+      from { opacity: 0; transform: scale(0.95); }
+      to { opacity: 1; transform: scale(1); }
+    }
+    
+    @keyframes slideInLeft {
+      from { opacity: 0; transform: translateX(-40px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+    
+    @keyframes slideInRight {
+      from { opacity: 0; transform: translateX(40px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+    
+    @keyframes messageSlide {
+      from { opacity: 0; transform: translateY(10px) scale(0.95); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.02); }
+    }
+    
+    @keyframes shimmer {
+      0% { background-position: -200% 0; }
+      100% { background-position: 200% 0; }
+    }
+    
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-3px); }
+    }
+    
+    @keyframes glow {
+      0% { box-shadow: 0 0 0 0 var(--accent); }
+      70% { box-shadow: 0 0 0 10px rgba(74, 109, 140, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(74, 109, 140, 0); }
+    }
+    
+    /* Классы анимаций */
+    .animate-fade-up { animation: fadeInUp 0.4s ease-out forwards; }
+    .animate-fade-scale { animation: fadeInScale 0.3s ease-out forwards; }
+    .animate-slide-left { animation: slideInLeft 0.4s ease-out forwards; }
+    .animate-slide-right { animation: slideInRight 0.4s ease-out forwards; }
+    .animate-message { animation: messageSlide 0.25s ease-out forwards; }
+    .animate-pulse { animation: pulse 0.3s ease-in-out; }
+    .animate-bounce { animation: bounce 0.3s ease-in-out; }
+    .animate-glow { animation: glow 0.5s ease-out; }
+    
+    /* Схлопнутые анимации (когда анимации выключены) */
+    body.animations-off .animate-fade-up,
+    body.animations-off .animate-fade-scale,
+    body.animations-off .animate-slide-left,
+    body.animations-off .animate-slide-right,
+    body.animations-off .animate-message,
+    body.animations-off .animate-pulse,
+    body.animations-off .animate-bounce,
+    body.animations-off .animate-glow {
+      animation: none !important;
+      opacity: 1 !important;
+      transform: none !important;
+    }
+    
+    /* ========== СВЕТЛАЯ ТЕМА ========== */
     :root {
       --bg-page: #edeef0;
       --bg-card: #ffffff;
       --bg-header: #4a6d8c;
-      --text-primary: #2a2a2a;
-      --text-secondary: #656565;
-      --text-light: #888;
-      --border: #e7e8ec;
-      --border-input: #d3d9de;
-      --hover: #e9edf1;
+      --text-primary: #1a1a1a;
+      --text-secondary: #555555;
+      --text-light: #888888;
+      --text-white: #ffffff;
+      --border: #e0e4e8;
+      --border-input: #d0d4d8;
+      --hover: #eef2f5;
       --accent: #4a6d8c;
       --accent-hover: #3a5a78;
-      --message-own: #cce4ff;
-      --message-other: #e9edf1;
-      --danger: #d9534f;
-      --success: #5cb85c;
+      --message-own: #d4e4f7;
+      --message-other: #f0f2f5;
+      --danger: #dc3545;
+      --danger-hover: #c82333;
+      --success: #28a745;
+      --shadow: 0 2px 8px rgba(0,0,0,0.08);
     }
     
-    /* Тёмная тема */
+    /* ========== ТЁМНАЯ ТЕМА (светлый текст!) ========== */
     body.dark {
-      --bg-page: #1a1a2e;
-      --bg-card: #16213e;
-      --bg-header: #0f3460;
-      --text-primary: #e0e0e0;
-      --text-secondary: #aaa;
-      --text-light: #888;
-      --border: #2a3a5a;
-      --border-input: #2a3a5a;
-      --hover: #1a2a4a;
-      --accent: #0f3460;
-      --accent-hover: #1a4a7a;
+      --bg-page: #121212;
+      --bg-card: #1e1e1e;
+      --bg-header: #0d2b3e;
+      --text-primary: #e8e8e8;
+      --text-secondary: #b0b0b0;
+      --text-light: #888888;
+      --text-white: #ffffff;
+      --border: #2c2c2c;
+      --border-input: #3a3a3a;
+      --hover: #2a2a2a;
+      --accent: #2c5a7a;
+      --accent-hover: #3a6a8a;
       --message-own: #1e3a5f;
-      --message-other: #2a3a5a;
-      --danger: #c9302c;
-      --success: #449d44;
+      --message-other: #2a2a2a;
+      --danger: #dc3545;
+      --danger-hover: #c82333;
+      --success: #28a745;
+      --shadow: 0 2px 8px rgba(0,0,0,0.3);
+    }
+    
+    /* ========== ЗАКРУГЛЕНИЯ (только для определённых элементов) ========== */
+    /* Карточки, кнопки, инпуты - да */
+    .register-card, .license-card, .reject-card,
+    .profile-header, .post-creator, .post-item,
+    .chat-layout, .settings-panel,
+    .register-input, .google-btn, .register-btn, .login-btn,
+    .btn, .send-btn, .chat-search input,
+    .post-creator textarea, .chat-input-area input,
+    .friend-item, .user-search-result {
+      border-radius: var(--radius-card, 12px);
+    }
+    
+    /* Аватары - да */
+    .profile-avatar, .post-author-avatar, .chat-contact-avatar {
+      border-radius: var(--radius-avatar, 50%);
+    }
+    
+    /* Сообщения - да */
+    .message-bubble {
+      border-radius: var(--radius-msg, 16px);
+    }
+    
+    /* Меню слева - НЕТ закруглений! */
+    .left-menu, .left-menu-item {
+      border-radius: 0 !important;
+    }
+    
+    /* Хедер - НЕТ закруглений! */
+    .page-header {
+      border-radius: 0 !important;
+    }
+    
+    /* Контакты в чате - НЕТ закруглений */
+    .chat-contact {
+      border-radius: 0 !important;
     }
     
     body {
@@ -82,20 +196,8 @@
       -webkit-tap-highlight-color: transparent;
       font-size: 13px;
       line-height: 1.4;
+      transition: background-color 0.3s, color 0.3s;
     }
-    
-    /* Закругления */
-    body.radius-sm { --radius-card: 8px; --radius-btn: 6px; --radius-input: 6px; --radius-avatar: 50%; }
-    body.radius-md { --radius-card: 12px; --radius-btn: 10px; --radius-input: 10px; --radius-avatar: 50%; }
-    body.radius-lg { --radius-card: 20px; --radius-btn: 18px; --radius-input: 18px; --radius-avatar: 50%; }
-    body.radius-xl { --radius-card: 28px; --radius-btn: 26px; --radius-input: 26px; --radius-avatar: 50%; }
-    
-    body { background: var(--bg-page); }
-    .register-card, .license-card, .reject-card, .profile-header, .post-creator, .post-item, .chat-layout,
-    .left-menu, .message-bubble { border-radius: var(--radius-card); }
-    .register-input, .google-btn, .register-btn, .login-btn, .btn, .send-btn, .chat-search input,
-    .post-creator textarea, .chat-input-area input { border-radius: var(--radius-btn); }
-    .profile-avatar, .post-author-avatar, .chat-contact-avatar { border-radius: var(--radius-avatar); }
     
     .app { max-width: 1000px; margin: 0 auto; width: 100%; flex: 1; display: flex; flex-direction: column; }
 
@@ -115,17 +217,20 @@
     .register-input {
       width: 100%; padding: 12px 14px; border: 2px solid var(--border-input);
       outline: none; background: var(--bg-card); color: var(--text-primary);
+      transition: border-color 0.2s;
     }
     .register-input:focus { border-color: var(--accent); }
     .google-btn, .register-btn, .login-btn {
       width: 100%; padding: 12px; font-weight: 600; cursor: pointer;
       display: flex; align-items: center; justify-content: center; gap: 10px;
+      transition: all 0.2s;
     }
     .google-btn { background: var(--bg-card); border: 2px solid var(--border-input); color: var(--text-primary); }
     .google-btn:hover { background: var(--hover); border-color: var(--accent); }
     .register-btn { background: var(--accent); border: none; color: white; }
-    .register-btn:hover { background: var(--accent-hover); }
+    .register-btn:hover { background: var(--accent-hover); transform: translateY(-1px); }
     .login-btn { background: transparent; border: 2px solid var(--accent); color: var(--accent); margin-top: 12px; }
+    .login-btn:hover { background: var(--accent); color: white; }
     .divider { display: flex; align-items: center; text-align: center; color: var(--text-light); font-size: 12px; margin: 20px 0; }
     .divider::before, .divider::after { content: ''; flex: 1; border-bottom: 1px solid var(--border); }
     .divider span { padding: 0 10px; }
@@ -138,6 +243,7 @@
     .license-text-container {
       background: var(--bg-page); border: 1px solid var(--border);
       padding: 16px; margin-bottom: 20px; max-height: 350px; overflow-y: auto;
+      color: var(--text-primary);
     }
     .license-accept-btn { background: var(--accent); border: none; width: 100%; color: white; font-weight: 600; cursor: pointer; margin-bottom: 8px; padding: 12px; }
     .license-reject-btn { background: var(--danger); border: none; width: 100%; color: white; font-weight: 600; cursor: pointer; padding: 12px; }
@@ -145,26 +251,31 @@
 
     .page-header {
       background: var(--bg-header); padding: 12px 20px; display: flex;
-      align-items: center; justify-content: space-between; color: white; position: sticky; top: 0; z-index: 20;
+      align-items: center; justify-content: space-between; color: var(--text-white); position: sticky; top: 0; z-index: 20;
     }
-    .header-logo { font-size: 22px; font-weight: 700; cursor: pointer; }
+    .header-logo { font-size: 22px; font-weight: 700; cursor: pointer; transition: transform 0.2s; }
+    .header-logo:hover { transform: scale(1.02); }
     .header-nav { display: flex; gap: 20px; font-size: 14px; }
-    .header-nav span { cursor: pointer; opacity: 0.8; padding: 6px 0; }
+    .header-nav span { cursor: pointer; opacity: 0.8; padding: 6px 0; transition: all 0.2s; }
+    .header-nav span:hover { opacity: 1; transform: translateY(-1px); }
     .header-nav span.active { opacity: 1; font-weight: 600; border-bottom: 2px solid white; }
-    .logout-btn { background: rgba(255,255,255,0.2); border: none; padding: 6px 14px; border-radius: 20px; color: white; cursor: pointer; font-size: 13px; }
-    .logout-btn:hover { background: rgba(255,255,255,0.3); }
+    .logout-btn { background: rgba(255,255,255,0.2); border: none; padding: 6px 14px; border-radius: 20px; color: white; cursor: pointer; font-size: 13px; transition: all 0.2s; }
+    .logout-btn:hover { background: rgba(255,255,255,0.3); transform: scale(1.02); }
 
     .main-layout { display: flex; flex: 1; background: var(--bg-page); }
     .left-menu {
       width: 240px; background: var(--bg-card); padding: 16px 0;
       border-right: 1px solid var(--border);
     }
-    .left-menu-item { padding: 10px 24px; cursor: pointer; color: var(--accent); font-weight: 500; border-left: 3px solid transparent; }
-    .left-menu-item:hover { background: var(--hover); }
+    .left-menu-item { padding: 10px 24px; cursor: pointer; color: var(--accent); font-weight: 500; border-left: 3px solid transparent; transition: all 0.2s; }
+    .left-menu-item:hover { background: var(--hover); transform: translateX(2px); }
     .left-menu-item.active { background: var(--hover); border-left-color: var(--accent); }
     .content-area { flex: 1; padding: 20px; overflow-y: auto; max-height: calc(100vh - 60px); }
 
-    .profile-header, .post-creator, .post-item, .chat-layout { background: var(--bg-card); border: 1px solid var(--border); margin-bottom: 20px; padding: 24px; }
+    .profile-header, .post-creator, .post-item, .chat-layout, .settings-panel { 
+      background: var(--bg-card); border: 1px solid var(--border); margin-bottom: 20px; padding: 24px;
+      box-shadow: var(--shadow);
+    }
     .profile-info { display: flex; gap: 24px; align-items: center; flex-wrap: wrap; }
     .profile-avatar {
       width: 80px; height: 80px; background: linear-gradient(135deg, var(--accent), #2c4c6e);
@@ -176,7 +287,9 @@
       width: 100%; border: 1px solid var(--border-input); background: var(--bg-card);
       color: var(--text-primary); padding: 12px; resize: vertical; min-height: 70px;
       font-family: inherit; font-size: 14px; margin-bottom: 12px;
+      transition: border-color 0.2s;
     }
+    .post-creator textarea:focus { outline: none; border-color: var(--accent); }
     .post-feed { display: flex; flex-direction: column; gap: 16px; }
     .post-author { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
     .post-author-avatar {
@@ -188,7 +301,7 @@
     .post-text { font-size: 14px; line-height: 1.5; color: var(--text-primary); }
 
     .chat-layout { display: flex; padding: 0; overflow: hidden; margin-bottom: 0; min-height: 550px; }
-    .chat-list-panel { width: 320px; border-right: 1px solid var(--border); display: flex; flex-direction: column; }
+    .chat-list-panel { width: 320px; border-right: 1px solid var(--border); display: flex; flex-direction: column; background: var(--bg-card); }
     .chat-search { padding: 14px; border-bottom: 1px solid var(--border); }
     .chat-search input {
       width: 100%; padding: 10px; border: 1px solid var(--border-input);
@@ -198,6 +311,7 @@
     .chat-contact {
       padding: 14px 16px; display: flex; align-items: center; gap: 12px;
       cursor: pointer; border-bottom: 1px solid var(--border);
+      transition: background 0.2s;
     }
     .chat-contact:hover { background: var(--hover); }
     .chat-contact.active { background: var(--hover); }
@@ -205,23 +319,25 @@
       width: 46px; height: 46px; background: linear-gradient(135deg, var(--accent), #2c4c6e);
       display: flex; align-items: center; justify-content: center; color: white; font-weight: bold;
     }
-    .chat-window { flex: 1; display: flex; flex-direction: column; }
+    .chat-window { flex: 1; display: flex; flex-direction: column; background: var(--bg-card); }
     .messages-container { flex: 1; padding: 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
     .message-bubble { max-width: 70%; padding: 10px 14px; align-self: flex-start; }
     .message-bubble.own { background: var(--message-own); align-self: flex-end; }
     .message-bubble:not(.own) { background: var(--message-other); }
     .message-sender { font-weight: 600; color: var(--accent); font-size: 12px; margin-bottom: 4px; }
     .message-time { font-size: 10px; color: var(--text-light); margin-top: 6px; }
-    .chat-input-area { border-top: 1px solid var(--border); padding: 14px; display: flex; gap: 10px; }
+    .chat-input-area { border-top: 1px solid var(--border); padding: 14px; display: flex; gap: 10px; background: var(--bg-card); }
     .chat-input-area input {
       flex: 1; padding: 12px; border: 1px solid var(--border-input);
       background: var(--bg-card); color: var(--text-primary);
     }
-    .btn { padding: 10px 20px; border: none; cursor: pointer; font-weight: 500; }
+    .btn { padding: 10px 20px; border: none; cursor: pointer; font-weight: 500; transition: all 0.2s; }
     .btn-primary { background: var(--accent); color: white; }
-    .btn-primary:hover { background: var(--accent-hover); }
+    .btn-primary:hover { background: var(--accent-hover); transform: translateY(-1px); }
     .btn-danger { background: var(--danger); color: white; }
-    .send-btn { background: var(--accent); color: white; padding: 12px 24px; border: none; cursor: pointer; font-weight: 600; }
+    .btn-danger:hover { background: var(--danger-hover); transform: translateY(-1px); }
+    .send-btn { background: var(--accent); color: white; padding: 12px 24px; border: none; cursor: pointer; font-weight: 600; transition: all 0.2s; }
+    .send-btn:hover { background: var(--accent-hover); transform: scale(1.02); }
 
     .toast {
       position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
@@ -232,11 +348,7 @@
     .toast.show { opacity: 1; }
     .toast.error { background: var(--danger); }
 
-    .settings-panel {
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      padding: 24px;
-    }
+    .settings-panel { padding: 24px; }
     .setting-item {
       display: flex;
       justify-content: space-between;
@@ -245,33 +357,35 @@
       border-bottom: 1px solid var(--border);
     }
     .setting-item:last-child { border-bottom: none; }
-    .theme-btn, .radius-btn {
+    .setting-item strong { color: var(--text-primary); }
+    .setting-item small { color: var(--text-secondary); font-size: 11px; }
+    .theme-btn, .radius-btn, .animation-toggle {
       padding: 8px 16px;
       margin-left: 8px;
       border: 1px solid var(--border-input);
       background: var(--bg-card);
       color: var(--text-primary);
       cursor: pointer;
+      transition: all 0.2s;
     }
-    .theme-btn.active, .radius-btn.active {
+    .theme-btn.active, .radius-btn.active, .animation-toggle.active {
       background: var(--accent);
       color: white;
       border-color: var(--accent);
     }
-    .friends-list {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      margin-top: 16px;
+    .theme-btn:hover, .radius-btn:hover, .animation-toggle:hover {
+      transform: translateY(-1px);
     }
+    .friends-list { display: flex; flex-direction: column; gap: 12px; margin-top: 16px; }
     .friend-item {
       display: flex;
       justify-content: space-between;
       align-items: center;
       padding: 12px;
       background: var(--bg-page);
-      border-radius: var(--radius-card);
     }
+    .friend-item strong { color: var(--text-primary); }
+    .friend-item small { color: var(--text-secondary); }
     .search-user-input {
       width: 100%;
       padding: 12px;
@@ -288,6 +402,9 @@
       justify-content: space-between;
       align-items: center;
     }
+    .user-search-result strong { color: var(--text-primary); }
+    .user-search-result small { color: var(--text-secondary); }
+    
     @media (max-width: 700px) {
       .left-menu { display: none; }
       .chat-list-panel { width: 100%; }
@@ -299,7 +416,7 @@
 <body>
 <div id="appRoot" class="app">
   <div id="registerScreen" class="register-screen">
-    <div class="register-card">
+    <div class="register-card animate-fade-scale">
       <div class="register-logo">MiS-MaS</div>
       <div class="register-subtitle">Войдите в свой аккаунт</div>
       <div class="register-input-wrapper">
@@ -326,8 +443,8 @@
   </div>
 
   <div id="licenseScreen" class="license-screen hidden">
-    <div class="license-card">
-      <h3 style="margin-bottom:16px;">Лицензионное соглашение</h3>
+    <div class="license-card animate-fade-scale">
+      <h3 style="margin-bottom:16px; color: var(--text-primary);">Лицензионное соглашение</h3>
       <div class="license-text-container">
         <p><strong>Лицензионное соглашение MiS-MaS</strong></p>
         <p>1. Сервис предоставляется "как есть".</p>
@@ -341,9 +458,9 @@
   </div>
 
   <div id="rejectScreen" class="reject-screen hidden">
-    <div class="reject-card">
-      <h3>Доступ запрещён</h3>
-      <p style="margin:16px 0;">Вы отказались от соглашения.</p>
+    <div class="reject-card animate-fade-scale">
+      <h3 style="color: var(--text-primary);">Доступ запрещён</h3>
+      <p style="margin:16px 0; color: var(--text-secondary);">Вы отказались от соглашения.</p>
       <button class="btn btn-primary" id="rejectBackBtn">Вернуться</button>
     </div>
   </div>
@@ -417,14 +534,16 @@
     return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   }
 
-  // Загрузка настроек темы и закруглений
+  // Загрузка настроек
   function loadSettings() {
     const theme = localStorage.getItem('theme') || 'light';
-    const radius = localStorage.getItem('radius') || 'md';
+    const animations = localStorage.getItem('animations') !== 'off';
+    
     if (theme === 'dark') document.body.classList.add('dark');
     else document.body.classList.remove('dark');
-    document.body.classList.remove('radius-sm', 'radius-md', 'radius-lg', 'radius-xl');
-    document.body.classList.add(`radius-${radius}`);
+    
+    if (!animations) document.body.classList.add('animations-off');
+    else document.body.classList.remove('animations-off');
   }
 
   function saveTheme(theme) {
@@ -433,10 +552,14 @@
     else document.body.classList.remove('dark');
   }
 
-  function saveRadius(radius) {
-    localStorage.setItem('radius', radius);
-    document.body.classList.remove('radius-sm', 'radius-md', 'radius-lg', 'radius-xl');
-    document.body.classList.add(`radius-${radius}`);
+  function saveAnimations(enabled) {
+    if (enabled) {
+      localStorage.setItem('animations', 'on');
+      document.body.classList.remove('animations-off');
+    } else {
+      localStorage.setItem('animations', 'off');
+      document.body.classList.add('animations-off');
+    }
   }
 
   async function createUserProfile(user) {
@@ -560,7 +683,7 @@
   async function renderProfile() {
     const contentArea = document.getElementById('contentArea');
     contentArea.innerHTML = `
-      <div class="profile-header">
+      <div class="profile-header animate-fade-up">
         <div class="profile-info">
           <div class="profile-avatar">${escapeHtml(currentUserData.name.charAt(0).toUpperCase())}</div>
           <div class="profile-details">
@@ -570,7 +693,7 @@
           </div>
         </div>
       </div>
-      <div class="post-creator">
+      <div class="post-creator animate-fade-up" style="animation-delay: 0.05s;">
         <textarea id="newPostText" placeholder="Что у вас нового?"></textarea>
         <button class="btn btn-primary" id="publishPostBtn">Опубликовать</button>
       </div>
@@ -597,8 +720,8 @@
       if (posts.length === 0) {
         container.innerHTML = '<p style="color:var(--text-secondary); text-align:center; padding:40px;">У вас пока нет постов</p>';
       } else {
-        container.innerHTML = posts.map(post => `
-          <div class="post-item">
+        container.innerHTML = posts.map((post, idx) => `
+          <div class="post-item animate-fade-up" style="animation-delay: ${idx * 0.03}s;">
             <div class="post-author">
               <div class="post-author-avatar">${escapeHtml((post.authorName || 'U').charAt(0).toUpperCase())}</div>
               <div>
@@ -629,8 +752,8 @@
       if (posts.length === 0) {
         container.innerHTML = '<p style="color:var(--text-secondary); text-align:center; padding:40px;">Новостей пока нет</p>';
       } else {
-        container.innerHTML = posts.map(post => `
-          <div class="post-item">
+        container.innerHTML = posts.map((post, idx) => `
+          <div class="post-item animate-fade-up" style="animation-delay: ${idx * 0.02}s;">
             <div class="post-author">
               <div class="post-author-avatar">${escapeHtml((post.authorName || 'U').charAt(0).toUpperCase())}</div>
               <div>
@@ -651,17 +774,16 @@
   async function renderFriends() {
     const contentArea = document.getElementById('contentArea');
     contentArea.innerHTML = `
-      <div class="settings-panel">
-        <h3 style="margin-bottom:20px;">👥 Мои друзья</h3>
+      <div class="settings-panel animate-fade-up">
+        <h3 style="margin-bottom:20px; color: var(--text-primary);">👥 Мои друзья</h3>
         <div id="friendsList" class="friends-list"></div>
         
-        <h3 style="margin:30px 0 20px 0;">🔍 Найти пользователя</h3>
+        <h3 style="margin:30px 0 20px 0; color: var(--text-primary);">🔍 Найти пользователя</h3>
         <input type="text" id="searchUserInput" class="search-user-input" placeholder="Введите email или имя пользователя">
         <div id="searchResults"></div>
       </div>
     `;
     
-    // Загрузка списка друзей
     const friendsListDiv = document.getElementById('friendsList');
     if (currentUserData.friends.length === 0) {
       friendsListDiv.innerHTML = '<p style="color:var(--text-secondary);">У вас пока нет друзей. Найдите пользователей выше!</p>';
@@ -676,8 +798,8 @@
       });
       const friends = (await Promise.all(friendsPromises)).filter(f => f);
       
-      friendsListDiv.innerHTML = friends.map(friend => `
-        <div class="friend-item">
+      friendsListDiv.innerHTML = friends.map((friend, idx) => `
+        <div class="friend-item animate-slide-left" style="animation-delay: ${idx * 0.05}s;">
           <div>
             <strong>${escapeHtml(friend.name)}</strong><br>
             <small>${escapeHtml(friend.email)}</small>
@@ -695,7 +817,6 @@
       });
     }
     
-    // Поиск пользователей
     const searchInput = document.getElementById('searchUserInput');
     searchInput.addEventListener('input', async () => {
       const query_text = searchInput.value.trim().toLowerCase();
@@ -720,7 +841,7 @@
         resultsDiv.innerHTML = '<p style="color:var(--text-secondary);">Пользователи не найдены</p>';
       } else {
         resultsDiv.innerHTML = users.map(user => `
-          <div class="user-search-result">
+          <div class="user-search-result animate-slide-right">
             <div>
               <strong>${escapeHtml(user.name)}</strong><br>
               <small>${escapeHtml(user.email)}</small>
@@ -755,7 +876,6 @@
       
       let chats = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       
-      // Фильтруем только чаты с друзьями
       const filteredChats = [];
       for (const chat of chats) {
         const otherUserId = chat.participants.find(id => id !== currentUserData.uid);
@@ -764,33 +884,27 @@
         }
       }
       
-      const finalChats = filteredChats.filter(chat => {
-        const otherUserId = chat.participants.find(id => id !== currentUserData.uid);
-        const otherUserRef = doc(db, 'users', otherUserId);
-        return getDoc(otherUserRef).then(snap => {
-          const otherName = snap.exists() ? snap.data().name : 'Пользователь';
-          return otherName.toLowerCase().includes(filter.toLowerCase());
-        });
-      });
-      
-      const processedChats = await Promise.all(finalChats.map(async chat => {
+      const processedChats = [];
+      for (const chat of filteredChats) {
         const otherUserId = chat.participants.find(id => id !== currentUserData.uid);
         const otherUserRef = doc(db, 'users', otherUserId);
         const otherUserSnap = await getDoc(otherUserRef);
         const otherName = otherUserSnap.exists() ? otherUserSnap.data().name : 'Пользователь';
-        return { ...chat, otherName, otherUserId };
-      }));
+        if (otherName.toLowerCase().includes(filter.toLowerCase())) {
+          processedChats.push({ ...chat, otherName, otherUserId });
+        }
+      }
       
       if (processedChats.length === 0) {
         container.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text-light);">Нет чатов. Добавьте друзей, чтобы начать общение!</div>';
         return;
       }
       
-      container.innerHTML = processedChats.map(chat => `
-        <div class="chat-contact ${chat.id === currentChatId ? 'active' : ''}" data-chat-id="${chat.id}" data-chat-name="${escapeHtml(chat.otherName)}" data-chat-userid="${chat.otherUserId}">
+      container.innerHTML = processedChats.map((chat, idx) => `
+        <div class="chat-contact ${chat.id === currentChatId ? 'active' : ''} animate-slide-left" style="animation-delay: ${idx * 0.03}s;" data-chat-id="${chat.id}" data-chat-name="${escapeHtml(chat.otherName)}" data-chat-userid="${chat.otherUserId}">
           <div class="chat-contact-avatar">${escapeHtml(chat.otherName.charAt(0).toUpperCase())}</div>
           <div style="flex:1;">
-            <div style="font-weight:600;">${escapeHtml(chat.otherName)}</div>
+            <div style="font-weight:600; color: var(--text-primary);">${escapeHtml(chat.otherName)}</div>
             <div style="font-size:12px;color:var(--text-light);">${escapeHtml((chat.lastMessage || 'Нет сообщений').substring(0, 40))}</div>
           </div>
         </div>
@@ -819,7 +933,7 @@
     
     chatWindow.innerHTML = `
       <div style="padding:12px 16px; border-bottom:1px solid var(--border); background:var(--bg-page);">
-        <strong>Чат с ${escapeHtml(otherUserName)}</strong>
+        <strong style="color: var(--text-primary);">Чат с ${escapeHtml(otherUserName)}</strong>
       </div>
       <div class="messages-container" id="chatMessages"></div>
       <div class="chat-input-area">
@@ -838,7 +952,7 @@
         const isOwn = msg.fromUserId === currentUserData.uid;
         const time = msg.createdAt?.toDate().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }) || '';
         return `
-          <div class="message-bubble ${isOwn ? 'own' : ''}">
+          <div class="message-bubble ${isOwn ? 'own animate-slide-right' : 'animate-slide-left'} animate-message">
             <div class="message-sender">${isOwn ? 'Вы' : escapeHtml(msg.fromUserName)}</div>
             <div>${escapeHtml(msg.text)}</div>
             <div class="message-time">${time}</div>
@@ -872,7 +986,7 @@
   async function renderMessages() {
     const contentArea = document.getElementById('contentArea');
     contentArea.innerHTML = `
-      <div class="chat-layout">
+      <div class="chat-layout animate-fade-up">
         <div class="chat-list-panel">
           <div class="chat-search">
             <input type="text" placeholder="Поиск чатов" id="chatSearchInput">
@@ -899,11 +1013,11 @@
   async function renderSettings() {
     const contentArea = document.getElementById('contentArea');
     const currentTheme = localStorage.getItem('theme') || 'light';
-    const currentRadius = localStorage.getItem('radius') || 'md';
+    const animationsEnabled = localStorage.getItem('animations') !== 'off';
     
     contentArea.innerHTML = `
-      <div class="settings-panel">
-        <h3 style="margin-bottom:20px;">⚙️ Настройки</h3>
+      <div class="settings-panel animate-fade-up">
+        <h3 style="margin-bottom:20px; color: var(--text-primary);">⚙️ Настройки</h3>
         
         <div class="setting-item">
           <div>
@@ -918,14 +1032,12 @@
         
         <div class="setting-item">
           <div>
-            <strong>🔘 Закругления углов</strong><br>
-            <small>Выберите степень закругления элементов</small>
+            <strong>✨ Анимации</strong><br>
+            <small>Включить или выключить все анимации интерфейса</small>
           </div>
           <div>
-            <button class="radius-btn ${currentRadius === 'sm' ? 'active' : ''}" data-radius="sm">Малые</button>
-            <button class="radius-btn ${currentRadius === 'md' ? 'active' : ''}" data-radius="md">Средние</button>
-            <button class="radius-btn ${currentRadius === 'lg' ? 'active' : ''}" data-radius="lg">Большие</button>
-            <button class="radius-btn ${currentRadius === 'xl' ? 'active' : ''}" data-radius="xl">Максимальные</button>
+            <button class="animation-toggle ${animationsEnabled ? 'active' : ''}" data-animations="on">Вкл</button>
+            <button class="animation-toggle ${!animationsEnabled ? 'active' : ''}" data-animations="off">Выкл</button>
           </div>
         </div>
         
@@ -948,14 +1060,13 @@
       });
     });
     
-    document.querySelectorAll('.radius-btn').forEach(btn => {
+    document.querySelectorAll('.animation-toggle').forEach(btn => {
       btn.addEventListener('click', () => {
-        const radius = btn.getAttribute('data-radius');
-        saveRadius(radius);
-        document.querySelectorAll('.radius-btn').forEach(b => b.classList.remove('active'));
+        const enabled = btn.getAttribute('data-animations') === 'on';
+        saveAnimations(enabled);
+        document.querySelectorAll('.animation-toggle').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
-        const radiusNames = { sm: 'малые', md: 'средние', lg: 'большие', xl: 'максимальные' };
-        showToast(`Закругления изменены на ${radiusNames[radius]}`);
+        showToast(enabled ? 'Анимации включены' : 'Анимации выключены');
       });
     });
   }
