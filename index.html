@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="theme-color" content="#4a6d8c">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>MiS-MaS</title>
   
   <!-- Firebase SDK -->
@@ -13,7 +12,7 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-analytics.js";
     import { getAuth, signInWithPopup, GoogleAuthProvider, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-    import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, doc, setDoc, getDoc, updateDoc, arrayUnion, arrayRemove, where, getDocs, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, doc, setDoc, getDoc, updateDoc, arrayUnion, arrayRemove, where, getDocs, serverTimestamp, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
     
     const firebaseConfig = {
       apiKey: "AIzaSyBxWhSwY0CnzNJDpDv3t93r-ES87VNpHNA",
@@ -31,13 +30,13 @@
     const db = getFirestore(app);
     const googleProvider = new GoogleAuthProvider();
 
-    window.firebaseApp = { app, auth, db, googleProvider, signInWithPopup, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, collection, addDoc, query, orderBy, onSnapshot, doc, setDoc, getDoc, updateDoc, arrayUnion, arrayRemove, where, getDocs, serverTimestamp };
+    window.firebaseApp = { app, auth, db, googleProvider, signInWithPopup, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, collection, addDoc, query, orderBy, onSnapshot, doc, setDoc, getDoc, updateDoc, arrayUnion, arrayRemove, where, getDocs, serverTimestamp, deleteDoc };
   </script>
   
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
     
-    /* ========== АНИМАЦИИ ========== */
+    /* Анимации */
     @keyframes fadeInUp {
       from { opacity: 0; transform: translateY(20px); }
       to { opacity: 1; transform: translateY(0); }
@@ -58,9 +57,9 @@
       from { opacity: 0; transform: translateY(10px) scale(0.95); }
       to { opacity: 1; transform: translateY(0) scale(1); }
     }
-    @keyframes pulse {
+    @keyframes badgePulse {
       0%, 100% { transform: scale(1); }
-      50% { transform: scale(1.02); }
+      50% { transform: scale(1.2); }
     }
     
     .animate-fade-up { animation: fadeInUp 0.3s ease-out forwards; }
@@ -76,7 +75,7 @@
       animation: none !important;
     }
     
-    /* ========== ТЕМЫ ========== */
+    /* Темы */
     :root {
       --bg-page: #f5f7fb;
       --bg-card: #ffffff;
@@ -94,6 +93,7 @@
       --message-other: #f0f2f5;
       --danger: #dc3545;
       --success: #28a745;
+      --warning: #ffc107;
       --shadow: 0 2px 8px rgba(0,0,0,0.05);
       --radius-card: 16px;
       --radius-btn: 12px;
@@ -126,8 +126,24 @@
       transition: background 0.3s;
     }
     
-    /* ========== МОБИЛЬНЫЕ СТИЛИ ========== */
     .app { max-width: 100%; margin: 0 auto; width: 100%; min-height: 100vh; display: flex; flex-direction: column; }
+    
+    /* Бейдж уведомлений */
+    .nav-item-with-badge {
+      position: relative;
+    }
+    .notification-badge {
+      position: absolute;
+      top: -5px;
+      right: -10px;
+      background: var(--danger);
+      color: white;
+      font-size: 10px;
+      font-weight: bold;
+      padding: 2px 6px;
+      border-radius: 10px;
+      animation: badgePulse 0.5s ease-in-out;
+    }
     
     /* Регистрация */
     .register-screen {
@@ -139,6 +155,7 @@
     .register-card {
       background: var(--bg-card); padding: 32px 24px;
       width: 100%; max-width: 380px; box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+      border-radius: var(--radius-card);
     }
     .register-logo { font-size: 32px; font-weight: 700; color: var(--accent); margin-bottom: 8px; text-align: center; }
     .register-subtitle { font-size: 13px; color: var(--text-secondary); margin-bottom: 24px; text-align: center; }
@@ -147,12 +164,12 @@
     .register-input {
       width: 100%; padding: 14px; border: 1.5px solid var(--border-input);
       outline: none; background: var(--bg-card); color: var(--text-primary);
-      font-size: 16px;
+      font-size: 16px; border-radius: var(--radius-btn);
     }
     .google-btn, .register-btn, .login-btn {
       width: 100%; padding: 14px; font-weight: 600; cursor: pointer;
       display: flex; align-items: center; justify-content: center; gap: 10px;
-      font-size: 15px;
+      font-size: 15px; border-radius: var(--radius-btn);
     }
     .google-btn { background: var(--bg-card); border: 1.5px solid var(--border-input); color: var(--text-primary); }
     .register-btn { background: var(--accent); border: none; color: white; }
@@ -169,14 +186,15 @@
       background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; z-index: 2000;
       padding: 20px;
     }
-    .license-card, .reject-card { background: var(--bg-card); padding: 24px; width: 100%; max-width: 400px; }
+    .license-card, .reject-card { background: var(--bg-card); padding: 24px; width: 100%; max-width: 400px; border-radius: var(--radius-card); }
     .license-text-container {
       background: var(--bg-page); border: 1px solid var(--border);
       padding: 16px; margin-bottom: 20px; max-height: 300px; overflow-y: auto;
-      font-size: 13px;
+      font-size: 13px; border-radius: var(--radius-btn);
     }
     .license-accept-btn, .license-reject-btn {
       width: 100%; padding: 14px; font-weight: 600; border: none; cursor: pointer;
+      border-radius: var(--radius-btn);
     }
     .license-accept-btn { background: var(--accent); color: white; margin-bottom: 8px; }
     .license-reject-btn { background: var(--danger); color: white; }
@@ -190,81 +208,29 @@
     }
     .header-logo { font-size: 20px; font-weight: 700; cursor: pointer; }
     .header-nav { display: flex; gap: 16px; font-size: 13px; }
-    .header-nav span { cursor: pointer; opacity: 0.8; padding: 6px 0; white-space: nowrap; }
+    .header-nav span { cursor: pointer; opacity: 0.8; padding: 6px 0; white-space: nowrap; position: relative; }
     .header-nav span.active { opacity: 1; font-weight: 600; border-bottom: 2px solid white; }
     .logout-btn { background: rgba(255,255,255,0.15); border: none; padding: 6px 12px; border-radius: 20px; color: white; cursor: pointer; font-size: 12px; }
     
-    /* Мобильное меню (гамбургер) */
-    .mobile-menu-btn {
-      display: none;
-      background: none;
-      border: none;
-      color: white;
-      font-size: 24px;
-      cursor: pointer;
-      padding: 4px 8px;
-    }
-    .mobile-menu-overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: rgba(0,0,0,0.5);
-      z-index: 200;
-      display: none;
-    }
-    .mobile-menu-overlay.active {
-      display: block;
-    }
-    .mobile-menu {
-      position: fixed;
-      top: 0;
-      left: -280px;
-      width: 280px;
-      height: 100%;
-      background: var(--bg-card);
-      z-index: 201;
-      transition: left 0.3s ease;
-      padding: 20px 0;
-      box-shadow: 2px 0 10px rgba(0,0,0,0.1);
-    }
-    .mobile-menu.active {
-      left: 0;
-    }
-    .mobile-menu-item {
-      padding: 14px 24px;
-      cursor: pointer;
-      color: var(--accent);
-      font-weight: 500;
-      border-left: 3px solid transparent;
-    }
-    .mobile-menu-item.active {
-      background: var(--hover);
-      border-left-color: var(--accent);
-    }
-    .mobile-menu-item:hover {
-      background: var(--hover);
-    }
-    .mobile-menu-close {
-      text-align: right;
-      padding: 12px 16px;
-      cursor: pointer;
-      font-size: 24px;
-      color: var(--text-secondary);
-      border-bottom: 1px solid var(--border);
-      margin-bottom: 12px;
-    }
+    /* Мобильное меню */
+    .mobile-menu-btn { display: none; background: none; border: none; color: white; font-size: 24px; cursor: pointer; padding: 4px 8px; }
+    .mobile-menu-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 200; display: none; }
+    .mobile-menu-overlay.active { display: block; }
+    .mobile-menu { position: fixed; top: 0; left: -280px; width: 280px; height: 100%; background: var(--bg-card); z-index: 201; transition: left 0.3s ease; padding: 20px 0; }
+    .mobile-menu.active { left: 0; }
+    .mobile-menu-item { padding: 14px 24px; cursor: pointer; color: var(--accent); font-weight: 500; border-left: 3px solid transparent; position: relative; }
+    .mobile-menu-item.active { background: var(--hover); border-left-color: var(--accent); }
+    .mobile-menu-close { text-align: right; padding: 12px 16px; cursor: pointer; font-size: 24px; color: var(--text-secondary); border-bottom: 1px solid var(--border); margin-bottom: 12px; }
     
     /* Основной контент */
     .main-layout { display: flex; flex: 1; background: var(--bg-page); }
     .left-menu { display: block; width: 220px; background: var(--bg-card); border-right: 1px solid var(--border); padding: 12px 0; }
-    .left-menu-item { padding: 12px 20px; cursor: pointer; color: var(--accent); font-weight: 500; border-left: 3px solid transparent; }
+    .left-menu-item { padding: 12px 20px; cursor: pointer; color: var(--accent); font-weight: 500; border-left: 3px solid transparent; position: relative; }
     .left-menu-item.active { background: var(--hover); border-left-color: var(--accent); }
     .content-area { flex: 1; padding: 16px; overflow-y: auto; min-height: calc(100vh - 56px); }
     
     /* Профиль */
-    .profile-header, .post-creator, .post-item, .chat-layout, .settings-panel {
+    .profile-header, .post-creator, .post-item, .chat-layout, .settings-panel, .notifications-panel {
       background: var(--bg-card); border-radius: var(--radius-card);
       margin-bottom: 16px; padding: 20px; box-shadow: var(--shadow);
       border: 1px solid var(--border);
@@ -295,6 +261,25 @@
     .post-date { font-size: 10px; color: var(--text-light); margin-top: 2px; }
     .post-text { font-size: 14px; line-height: 1.5; }
     
+    /* Уведомления */
+    .notifications-panel h3 { margin-bottom: 16px; color: var(--text-primary); }
+    .notification-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 14px;
+      background: var(--bg-page);
+      border-radius: var(--radius-card);
+      margin-bottom: 10px;
+    }
+    .notification-info strong { color: var(--accent); }
+    .notification-info p { margin-top: 4px; font-size: 12px; color: var(--text-secondary); }
+    .notification-actions { display: flex; gap: 8px; }
+    .notification-actions button { padding: 8px 16px; font-size: 12px; }
+    .btn-success { background: var(--success); color: white; border: none; border-radius: var(--radius-btn); cursor: pointer; }
+    .btn-warning { background: var(--warning); color: #333; border: none; border-radius: var(--radius-btn); cursor: pointer; }
+    .empty-notifications { text-align: center; padding: 40px; color: var(--text-secondary); }
+    
     /* Чат */
     .chat-layout { display: flex; flex-direction: column; padding: 0; overflow: hidden; min-height: 500px; }
     .chat-list-panel { width: 100%; border-right: none; border-bottom: 1px solid var(--border); }
@@ -319,7 +304,6 @@
       align-self: flex-start; word-wrap: break-word;
     }
     .message-bubble.own { background: var(--message-own); align-self: flex-end; }
-    .message-bubble:not(.own) { background: var(--message-other); }
     .message-sender { font-weight: 600; color: var(--accent); font-size: 11px; margin-bottom: 4px; }
     .message-time { font-size: 9px; color: var(--text-light); margin-top: 4px; }
     .chat-input-area {
@@ -331,70 +315,29 @@
       background: var(--bg-card); color: var(--text-primary); border-radius: var(--radius-btn);
       font-size: 14px;
     }
-    .btn, .send-btn {
-      padding: 10px 18px; border: none; cursor: pointer; font-weight: 500;
-      border-radius: var(--radius-btn); transition: opacity 0.2s;
-    }
+    .btn, .send-btn { padding: 10px 18px; border: none; cursor: pointer; font-weight: 500; border-radius: var(--radius-btn); transition: opacity 0.2s; }
     .btn-primary { background: var(--accent); color: white; }
     .btn-danger { background: var(--danger); color: white; }
+    .btn-success { background: var(--success); color: white; }
     .send-btn { background: var(--accent); color: white; }
-    .btn:active, .send-btn:active { opacity: 0.8; transform: scale(0.98); }
     
     /* Настройки */
     .settings-panel { padding: 20px; }
-    .setting-item {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 14px 0;
-      border-bottom: 1px solid var(--border);
-      flex-wrap: wrap;
-      gap: 10px;
-    }
-    .theme-btn, .animation-toggle {
-      padding: 8px 14px;
-      margin-left: 6px;
-      border: 1px solid var(--border-input);
-      background: var(--bg-card);
-      color: var(--text-primary);
-      cursor: pointer;
-      border-radius: var(--radius-btn);
-    }
-    .theme-btn.active, .animation-toggle.active {
-      background: var(--accent);
-      color: white;
-    }
+    .setting-item { display: flex; justify-content: space-between; align-items: center; padding: 14px 0; border-bottom: 1px solid var(--border); flex-wrap: wrap; gap: 10px; }
+    .theme-btn, .animation-toggle { padding: 8px 14px; margin-left: 6px; border: 1px solid var(--border-input); background: var(--bg-card); color: var(--text-primary); cursor: pointer; border-radius: var(--radius-btn); }
+    .theme-btn.active, .animation-toggle.active { background: var(--accent); color: white; }
     
     /* Друзья */
     .friends-list { display: flex; flex-direction: column; gap: 10px; margin-top: 16px; }
-    .friend-item, .user-search-result {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 12px;
-      background: var(--bg-page);
-      border-radius: var(--radius-card);
-      flex-wrap: wrap;
-      gap: 10px;
-    }
-    .search-user-input {
-      width: 100%; padding: 12px; border: 1px solid var(--border-input);
-      background: var(--bg-card); color: var(--text-primary); border-radius: var(--radius-btn);
-      margin-bottom: 12px; font-size: 14px;
-    }
+    .friend-item, .user-search-result { display: flex; justify-content: space-between; align-items: center; padding: 12px; background: var(--bg-page); border-radius: var(--radius-card); flex-wrap: wrap; gap: 10px; }
+    .search-user-input { width: 100%; padding: 12px; border: 1px solid var(--border-input); background: var(--bg-card); color: var(--text-primary); border-radius: var(--radius-btn); margin-bottom: 12px; font-size: 14px; }
     
     /* Toast */
-    .toast {
-      position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
-      background: rgba(0,0,0,0.8); color: white; padding: 10px 20px;
-      border-radius: 30px; font-size: 13px; z-index: 3000; opacity: 0;
-      transition: opacity 0.3s; pointer-events: none; white-space: nowrap;
-      max-width: 90%; white-space: normal; text-align: center;
-    }
+    .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.8); color: white; padding: 10px 20px; border-radius: 30px; font-size: 13px; z-index: 3000; opacity: 0; transition: opacity 0.3s; pointer-events: none; max-width: 90%; text-align: center; }
     .toast.show { opacity: 1; }
     .toast.error { background: var(--danger); }
     
-    /* ========== АДАПТИВ (МОБИЛЬНЫЙ ПЕРВЫЙ) ========== */
+    /* Адаптив */
     @media (max-width: 768px) {
       .left-menu { display: none; }
       .mobile-menu-btn { display: block; }
@@ -402,22 +345,10 @@
       .profile-info { flex-direction: column; text-align: center; }
       .setting-item { flex-direction: column; align-items: flex-start; }
       .message-bubble { max-width: 90%; }
-      .register-card { padding: 24px 20px; }
     }
-    
     @media (min-width: 769px) {
       .mobile-menu-btn, .mobile-menu-overlay, .mobile-menu { display: none !important; }
       .left-menu { display: block !important; }
-    }
-    
-    @media (max-width: 480px) {
-      .content-area { padding: 12px; }
-      .profile-header, .post-creator, .post-item, .settings-panel { padding: 16px; }
-      .profile-avatar { width: 60px; height: 60px; font-size: 24px; }
-      .profile-details h2 { font-size: 18px; }
-      .btn, .send-btn { padding: 10px 16px; font-size: 13px; }
-      .chat-contact { padding: 10px; }
-      .chat-contact-avatar { width: 40px; height: 40px; font-size: 14px; }
     }
   </style>
 </head>
@@ -478,30 +409,32 @@
       <button class="mobile-menu-btn" id="mobileMenuBtn">☰</button>
       <div class="header-logo" id="logoBtn">MiS-MaS</div>
       <div class="header-nav">
-        <span data-page="profile" class="active">Профиль</span>
+        <span data-page="profile">Профиль</span>
         <span data-page="feed">Новости</span>
         <span data-page="friends">Друзья</span>
+        <span data-page="notifications" class="nav-item-with-badge" id="notificationsNav">Уведомления<span id="notificationBadge" class="notification-badge hidden">0</span></span>
         <span data-page="messages">Чаты</span>
       </div>
       <button class="logout-btn" id="logoutBtn">Выйти</button>
     </header>
 
-    <!-- Мобильное меню -->
     <div class="mobile-menu-overlay" id="mobileMenuOverlay"></div>
     <div class="mobile-menu" id="mobileMenu">
       <div class="mobile-menu-close" id="mobileMenuClose">✕</div>
-      <div class="mobile-menu-item active" data-page="profile">Моя страница</div>
+      <div class="mobile-menu-item" data-page="profile">Моя страница</div>
       <div class="mobile-menu-item" data-page="feed">Новости</div>
       <div class="mobile-menu-item" data-page="friends">Друзья</div>
+      <div class="mobile-menu-item" data-page="notifications">Уведомления</div>
       <div class="mobile-menu-item" data-page="messages">Сообщения</div>
       <div class="mobile-menu-item" id="settingsMenuBtnMobile">Настройки</div>
     </div>
 
     <div class="main-layout">
       <div class="left-menu">
-        <div class="left-menu-item active" data-page="profile">Моя страница</div>
+        <div class="left-menu-item" data-page="profile">Моя страница</div>
         <div class="left-menu-item" data-page="feed">Новости</div>
         <div class="left-menu-item" data-page="friends">Друзья</div>
+        <div class="left-menu-item" data-page="notifications">Уведомления</div>
         <div class="left-menu-item" data-page="messages">Сообщения</div>
         <div class="left-menu-item" id="settingsMenuBtn">Настройки</div>
       </div>
@@ -513,13 +446,11 @@
 <div id="toast" class="toast"></div>
 
 <script type="module">
-  // Импорт и код из предыдущей версии (сохранён для краткости)
-  // Полный функционал: темы, анимации, друзья, чаты, сообщения
-  // Импорт Firebase
+  // Импорт Firebase (упрощённый для краткости, полная логика ниже)
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
   import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-analytics.js";
   import { getAuth, signInWithPopup, GoogleAuthProvider, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-  import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, doc, setDoc, getDoc, updateDoc, arrayUnion, arrayRemove, where, getDocs, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+  import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, doc, setDoc, getDoc, updateDoc, arrayUnion, arrayRemove, where, getDocs, serverTimestamp, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
   
   const firebaseConfig = {
     apiKey: "AIzaSyBxWhSwY0CnzNJDpDv3t93r-ES87VNpHNA",
@@ -543,28 +474,9 @@
   let currentChatUserId = null;
   let postsUnsubscribe = null;
   let messagesUnsubscribe = null;
+  let notificationsUnsubscribe = null;
 
-  // Мобильное меню
-  const mobileMenuBtn = document.getElementById('mobileMenuBtn');
-  const mobileMenu = document.getElementById('mobileMenu');
-  const mobileMenuOverlay = document.getElementById('mobileMenuOverlay');
-  const mobileMenuClose = document.getElementById('mobileMenuClose');
-  
-  function toggleMobileMenu(show) {
-    if (show) {
-      mobileMenu.classList.add('active');
-      mobileMenuOverlay.classList.add('active');
-    } else {
-      mobileMenu.classList.remove('active');
-      mobileMenuOverlay.classList.remove('active');
-    }
-  }
-  
-  mobileMenuBtn?.addEventListener('click', () => toggleMobileMenu(true));
-  mobileMenuClose?.addEventListener('click', () => toggleMobileMenu(false));
-  mobileMenuOverlay?.addEventListener('click', () => toggleMobileMenu(false));
-  
-  // Функции из предыдущей версии (сохранены)
+  // Вспомогательные функции
   function showToast(msg, isError = false) {
     const toast = document.getElementById('toast');
     toast.textContent = msg;
@@ -603,6 +515,102 @@
     }
   }
   
+  // Обновление бейджа уведомлений
+  async function updateNotificationBadge() {
+    if (!currentUserData.uid) return;
+    const q = query(collection(db, 'friendRequests'), where('toUserId', '==', currentUserData.uid), where('status', '==', 'pending'));
+    const snapshot = await getDocs(q);
+    const count = snapshot.size;
+    const badge = document.getElementById('notificationBadge');
+    if (badge) {
+      if (count > 0) {
+        badge.textContent = count;
+        badge.classList.remove('hidden');
+      } else {
+        badge.classList.add('hidden');
+      }
+    }
+  }
+  
+  // Отправка заявки в друзья
+  async function sendFriendRequest(toUserId, toUserName) {
+    if (toUserId === currentUserData.uid) {
+      showToast('Нельзя отправить заявку самому себе', true);
+      return false;
+    }
+    if (currentUserData.friends.includes(toUserId)) {
+      showToast('Этот пользователь уже в друзьях', true);
+      return false;
+    }
+    // Проверка на уже отправленную заявку
+    const q = query(collection(db, 'friendRequests'), 
+      where('fromUserId', '==', currentUserData.uid),
+      where('toUserId', '==', toUserId),
+      where('status', '==', 'pending'));
+    const existing = await getDocs(q);
+    if (!existing.empty) {
+      showToast('Заявка уже отправлена', true);
+      return false;
+    }
+    
+    await addDoc(collection(db, 'friendRequests'), {
+      fromUserId: currentUserData.uid,
+      fromUserName: currentUserData.name,
+      toUserId: toUserId,
+      toUserName: toUserName,
+      status: 'pending',
+      createdAt: serverTimestamp()
+    });
+    showToast(`Заявка в друзья отправлена пользователю ${toUserName}`);
+    return true;
+  }
+  
+  // Принятие заявки
+  async function acceptFriendRequest(requestId, fromUserId, fromUserName) {
+    // Добавляем друг друга в друзья
+    const userRef = doc(db, 'users', currentUserData.uid);
+    await updateDoc(userRef, { friends: arrayUnion(fromUserId) });
+    
+    const fromUserRef = doc(db, 'users', fromUserId);
+    await updateDoc(fromUserRef, { friends: arrayUnion(currentUserData.uid) });
+    
+    // Обновляем локальные данные
+    currentUserData.friends.push(fromUserId);
+    
+    // Обновляем статус заявки
+    const requestRef = doc(db, 'friendRequests', requestId);
+    await updateDoc(requestRef, { status: 'accepted' });
+    
+    // Создаём чат
+    const chatId = [currentUserData.uid, fromUserId].sort().join('_');
+    const chatRef = doc(db, 'chats', chatId);
+    const chatSnap = await getDoc(chatRef);
+    if (!chatSnap.exists()) {
+      await setDoc(chatRef, {
+        participants: [currentUserData.uid, fromUserId],
+        participantNames: {
+          [currentUserData.uid]: currentUserData.name,
+          [fromUserId]: fromUserName
+        },
+        createdAt: serverTimestamp(),
+        lastUpdated: serverTimestamp()
+      });
+    }
+    
+    showToast(`${fromUserName} теперь ваш друг!`);
+    updateNotificationBadge();
+    if (currentPage === 'notifications') renderNotifications();
+    if (currentPage === 'friends') renderFriends();
+  }
+  
+  // Отклонение заявки
+  async function rejectFriendRequest(requestId) {
+    await deleteDoc(doc(db, 'friendRequests', requestId));
+    showToast('Заявка отклонена');
+    updateNotificationBadge();
+    if (currentPage === 'notifications') renderNotifications();
+  }
+  
   async function createUserProfile(user) {
     const userRef = doc(db, 'users', user.uid);
     const userSnap = await getDoc(userRef);
@@ -627,18 +635,9 @@
     document.getElementById('mainInterface').classList.remove('hidden');
     document.getElementById('registerScreen').classList.add('hidden');
     loadSettings();
+    updateNotificationBadge();
     renderPage('profile');
     showToast(`Добро пожаловать, ${currentUserData.name}!`);
-  }
-  
-  async function addFriend(friendId, friendName) {
-    if (friendId === currentUserData.uid) { showToast('Нельзя добавить себя', true); return false; }
-    if (currentUserData.friends.includes(friendId)) { showToast('Уже в друзьях', true); return false; }
-    const userRef = doc(db, 'users', currentUserData.uid);
-    await updateDoc(userRef, { friends: arrayUnion(friendId) });
-    currentUserData.friends.push(friendId);
-    showToast(`${friendName} добавлен в друзья!`);
-    return true;
   }
   
   async function removeFriend(friendId) {
@@ -681,6 +680,60 @@
       }
       return true;
     } catch(e) { showToast('Ошибка отправки', true); return false; }
+  }
+  
+  // Рендер уведомлений
+  async function renderNotifications() {
+    const contentArea = document.getElementById('contentArea');
+    contentArea.innerHTML = `
+      <div class="notifications-panel animate-fade-up">
+        <h3>🔔 Уведомления</h3>
+        <div id="notificationsList"></div>
+      </div>
+    `;
+    
+    const q = query(collection(db, 'friendRequests'), where('toUserId', '==', currentUserData.uid), where('status', '==', 'pending'), orderBy('createdAt', 'desc'));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const container = document.getElementById('notificationsList');
+      if (!container) return;
+      
+      const requests = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      if (requests.length === 0) {
+        container.innerHTML = '<div class="empty-notifications">✨ Нет новых уведомлений</div>';
+      } else {
+        container.innerHTML = requests.map(req => `
+          <div class="notification-item animate-slide-left">
+            <div class="notification-info">
+              <strong>${escapeHtml(req.fromUserName)}</strong>
+              <p>📨 Хочет добавить вас в друзья</p>
+            </div>
+            <div class="notification-actions">
+              <button class="btn-success accept-request" data-id="${req.id}" data-from-id="${req.fromUserId}" data-from-name="${escapeHtml(req.fromUserName)}">✅ Принять</button>
+              <button class="btn-warning reject-request" data-id="${req.id}">❌ Отклонить</button>
+            </div>
+          </div>
+        `).join('');
+        
+        document.querySelectorAll('.accept-request').forEach(btn => {
+          btn.addEventListener('click', async () => {
+            await acceptFriendRequest(btn.getAttribute('data-id'), btn.getAttribute('data-from-id'), btn.getAttribute('data-from-name'));
+            renderNotifications();
+            updateNotificationBadge();
+          });
+        });
+        
+        document.querySelectorAll('.reject-request').forEach(btn => {
+          btn.addEventListener('click', async () => {
+            await rejectFriendRequest(btn.getAttribute('data-id'));
+            renderNotifications();
+            updateNotificationBadge();
+          });
+        });
+      }
+    });
+    
+    if (notificationsUnsubscribe) notificationsUnsubscribe();
+    window.notificationsUnsubscribe = unsubscribe;
   }
   
   async function renderProfile() {
@@ -758,16 +811,16 @@
     const contentArea = document.getElementById('contentArea');
     contentArea.innerHTML = `
       <div class="settings-panel animate-fade-up">
-        <h3 style="margin-bottom:16px;">👥 Друзья</h3>
+        <h3 style="margin-bottom:16px;">👥 Мои друзья (${currentUserData.friends.length})</h3>
         <div id="friendsList" class="friends-list"></div>
-        <h3 style="margin:24px 0 16px;">🔍 Найти</h3>
+        <h3 style="margin:24px 0 16px;">🔍 Найти пользователей</h3>
         <input type="text" id="searchUserInput" class="search-user-input" placeholder="Email или имя">
         <div id="searchResults"></div>
       </div>
     `;
     const friendsListDiv = document.getElementById('friendsList');
     if (currentUserData.friends.length === 0) {
-      friendsListDiv.innerHTML = '<p style="color:var(--text-secondary);">Нет друзей</p>';
+      friendsListDiv.innerHTML = '<p style="color:var(--text-secondary);">У вас пока нет друзей</p>';
     } else {
       const friendsPromises = currentUserData.friends.map(async (friendId) => {
         const friendSnap = await getDoc(doc(db, 'users', friendId));
@@ -777,11 +830,11 @@
       friendsListDiv.innerHTML = friends.map((friend, idx) => `
         <div class="friend-item animate-slide-left" style="animation-delay: ${idx * 0.05}s;">
           <div><strong>${escapeHtml(friend.name)}</strong><br><small>${escapeHtml(friend.email)}</small></div>
-          <button class="btn btn-danger" data-friend-id="${friend.id}">Удалить</button>
+          <button class="btn btn-danger remove-friend" data-id="${friend.id}">Удалить</button>
         </div>
       `).join('');
-      document.querySelectorAll('[data-friend-id]').forEach(btn => {
-        btn.addEventListener('click', async () => { await removeFriend(btn.getAttribute('data-friend-id')); renderFriends(); });
+      document.querySelectorAll('.remove-friend').forEach(btn => {
+        btn.addEventListener('click', async () => { await removeFriend(btn.getAttribute('data-id')); renderFriends(); updateNotificationBadge(); });
       });
     }
     const searchInput = document.getElementById('searchUserInput');
@@ -801,14 +854,14 @@
       else resultsDiv.innerHTML = users.map(user => `
         <div class="user-search-result">
           <div><strong>${escapeHtml(user.name)}</strong><br><small>${escapeHtml(user.email)}</small></div>
-          ${currentUserData.friends.includes(user.uid) ? '<button class="btn btn-danger" disabled>В друзьях</button>' :
-            `<button class="btn btn-primary add-friend-btn" data-id="${user.uid}" data-name="${escapeHtml(user.name)}">➕ Добавить</button>`}
+          ${currentUserData.friends.includes(user.uid) ? '<button class="btn btn-danger" disabled>✓ В друзьях</button>' :
+            `<button class="btn btn-primary send-request-btn" data-id="${user.uid}" data-name="${escapeHtml(user.name)}">➕ Добавить в друзья</button>`}
         </div>
       `).join('');
-      document.querySelectorAll('.add-friend-btn').forEach(btn => {
+      document.querySelectorAll('.send-request-btn').forEach(btn => {
         btn.addEventListener('click', async () => {
-          await addFriend(btn.getAttribute('data-id'), btn.getAttribute('data-name'));
-          renderFriends();
+          await sendFriendRequest(btn.getAttribute('data-id'), btn.getAttribute('data-name'));
+          updateNotificationBadge();
         });
       });
     });
@@ -953,6 +1006,7 @@
       case 'profile': await renderProfile(); break;
       case 'feed': await renderFeed(); break;
       case 'friends': await renderFriends(); break;
+      case 'notifications': await renderNotifications(); break;
       case 'messages': await renderMessages(); break;
       case 'settings': await renderSettings(); break;
       default: await renderProfile();
@@ -969,6 +1023,23 @@
     document.querySelector(`.mobile-menu-item[data-page="${page}"]`)?.classList.add('active');
     renderPage(page);
   }
+  
+  // Мобильное меню
+  function toggleMobileMenu(show) {
+    const menu = document.getElementById('mobileMenu');
+    const overlay = document.getElementById('mobileMenuOverlay');
+    if (show) {
+      menu?.classList.add('active');
+      overlay?.classList.add('active');
+    } else {
+      menu?.classList.remove('active');
+      overlay?.classList.remove('active');
+    }
+  }
+  
+  document.getElementById('mobileMenuBtn')?.addEventListener('click', () => toggleMobileMenu(true));
+  document.getElementById('mobileMenuClose')?.addEventListener('click', () => toggleMobileMenu(false));
+  document.getElementById('mobileMenuOverlay')?.addEventListener('click', () => toggleMobileMenu(false));
   
   // Event Listeners
   document.getElementById('registerEmailBtn')?.addEventListener('click', async () => {
@@ -1002,7 +1073,6 @@
     localStorage.removeItem('mismos_license');
     document.getElementById('mainInterface').classList.add('hidden');
     document.getElementById('registerScreen').classList.remove('hidden');
-    document.getElementById('licenseScreen').classList.add('hidden');
   });
   
   document.getElementById('licenseAcceptBtn')?.addEventListener('click', () => {
@@ -1047,6 +1117,7 @@
         document.getElementById('licenseScreen').classList.add('hidden');
         document.getElementById('mainInterface').classList.remove('hidden');
         loadSettings();
+        updateNotificationBadge();
         renderPage('profile');
       } else {
         document.getElementById('registerScreen').classList.add('hidden');
