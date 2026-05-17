@@ -58,11 +58,11 @@
     }
     @keyframes badgePulse {
       0%, 100% { transform: scale(1); }
-      50% { transform: scale(1.3); background: #ff4444; }
+      50% { transform: scale(1.2); background: #ff4444; }
     }
     @keyframes likeHeart {
       0% { transform: scale(1); }
-      50% { transform: scale(1.3); color: #e74c3c; }
+      50% { transform: scale(1.3); }
       100% { transform: scale(1); }
     }
     
@@ -135,11 +135,12 @@
     
     .app { max-width: 100%; margin: 0 auto; width: 100%; min-height: 100vh; display: flex; flex-direction: column; }
     
-    /* Бейдж уведомлений - ИСПРАВЛЕНО: не обрезается */
+    /* Бейдж уведомлений */
     .nav-item-with-badge {
       position: relative;
       display: inline-flex;
       align-items: center;
+      cursor: pointer;
     }
     .notification-badge {
       position: absolute;
@@ -264,7 +265,7 @@
     .post-date { font-size: 11px; color: var(--text-light); margin-top: 2px; }
     .post-text { font-size: 15px; line-height: 1.5; margin-bottom: 12px; }
     
-    /* Лайки */
+    /* Лайки и комментарии */
     .post-actions {
       display: flex;
       gap: 20px;
@@ -453,18 +454,18 @@
   <div id="registerScreen" class="register-screen">
     <div class="register-card animate-fade-scale">
       <div class="register-logo">MiS-MaS</div>
-      <div class="register-subtitle">Войдите в аккаунт</div>
+      <div class="register-subtitle">Sign in to your account</div>
       <div class="register-input-wrapper">
         <label>Email</label>
         <input type="email" id="registerEmail" class="register-input" placeholder="example@mail.com">
       </div>
       <div class="register-input-wrapper">
-        <label>Пароль</label>
-        <input type="password" id="registerPassword" class="register-input" placeholder="Минимум 6 символов">
+        <label>Password</label>
+        <input type="password" id="registerPassword" class="register-input" placeholder="Minimum 6 characters">
       </div>
-      <button class="register-btn" id="registerEmailBtn">Зарегистрироваться</button>
-      <button class="login-btn" id="loginEmailBtn">Войти</button>
-      <div class="divider"><span>или</span></div>
+      <button class="register-btn" id="registerEmailBtn">Sign Up</button>
+      <button class="login-btn" id="loginEmailBtn">Sign In</button>
+      <div class="divider"><span>or</span></div>
       <button class="google-btn" id="googleLoginBtn">
         <svg width="18" height="18" viewBox="0 0 24 24">
           <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -479,60 +480,60 @@
 
   <div id="licenseScreen" class="license-screen hidden">
     <div class="license-card animate-fade-scale">
-      <h3 style="margin-bottom:16px;">Лицензионное соглашение</h3>
+      <h3 style="margin-bottom:16px;">License Agreement</h3>
       <div class="license-text-container">
-        <p><strong>Лицензионное соглашение MiS-MaS</strong></p>
-        <p>1. Сервис предоставляется "как есть".</p>
-        <p>2. Запрещено нарушать законодательство.</p>
-        <p>3. Администрация не несет ответственности за контент.</p>
-        <p>4. Используя сервис, вы соглашаетесь с правилами.</p>
+        <p><strong>MiS-MaS License Agreement</strong></p>
+        <p>1. The service is provided "as is".</p>
+        <p>2. It is forbidden to violate the law.</p>
+        <p>3. The administration is not responsible for user content.</p>
+        <p>4. By using the service, you agree to the rules.</p>
       </div>
-      <button class="license-accept-btn" id="licenseAcceptBtn">Принимаю</button>
-      <button class="license-reject-btn" id="licenseRejectBtn">Отказываюсь</button>
+      <button class="license-accept-btn" id="licenseAcceptBtn">Accept</button>
+      <button class="license-reject-btn" id="licenseRejectBtn">Decline</button>
     </div>
   </div>
 
   <div id="rejectScreen" class="reject-screen hidden">
     <div class="reject-card animate-fade-scale">
-      <h3>Доступ запрещён</h3>
-      <p style="margin:16px 0;">Вы отказались от соглашения.</p>
-      <button class="btn btn-primary" id="rejectBackBtn">Вернуться</button>
+      <h3>Access Denied</h3>
+      <p style="margin:16px 0;">You have declined the agreement.</p>
+      <button class="btn btn-primary" id="rejectBackBtn">Back</button>
     </div>
   </div>
 
   <div id="mainInterface" class="hidden">
     <header class="page-header">
-      <button class="mobile-menu-btn" id="mobileMenuBtn">☰</button>
+      <button class="mobile-menu-btn" id="mobileMenuBtn">≡</button>
       <div class="header-logo" id="logoBtn">MiS-MaS</div>
       <div class="header-nav">
-        <span data-page="profile">Профиль</span>
-        <span data-page="feed">Новости</span>
-        <span data-page="friends">Друзья</span>
-        <span data-page="notifications" class="nav-item-with-badge" id="notificationsNav">🔔<span id="notificationBadge" class="notification-badge hidden">0</span></span>
-        <span data-page="messages">Чаты</span>
+        <span data-page="profile">Profile</span>
+        <span data-page="feed">Feed</span>
+        <span data-page="friends">Friends</span>
+        <span data-page="notifications" class="nav-item-with-badge" id="notificationsNav">Notifications<span id="notificationBadge" class="notification-badge hidden">0</span></span>
+        <span data-page="messages">Messages</span>
       </div>
-      <button class="logout-btn" id="logoutBtn">Выйти</button>
+      <button class="logout-btn" id="logoutBtn">Logout</button>
     </header>
 
     <div class="mobile-menu-overlay" id="mobileMenuOverlay"></div>
     <div class="mobile-menu" id="mobileMenu">
-      <div class="mobile-menu-close" id="mobileMenuClose">✕</div>
-      <div class="mobile-menu-item" data-page="profile">Моя страница</div>
-      <div class="mobile-menu-item" data-page="feed">Новости</div>
-      <div class="mobile-menu-item" data-page="friends">Друзья</div>
-      <div class="mobile-menu-item" data-page="notifications">🔔 Уведомления</div>
-      <div class="mobile-menu-item" data-page="messages">Сообщения</div>
-      <div class="mobile-menu-item" id="settingsMenuBtnMobile">Настройки</div>
+      <div class="mobile-menu-close" id="mobileMenuClose">×</div>
+      <div class="mobile-menu-item" data-page="profile">My Profile</div>
+      <div class="mobile-menu-item" data-page="feed">News Feed</div>
+      <div class="mobile-menu-item" data-page="friends">Friends</div>
+      <div class="mobile-menu-item" data-page="notifications">Notifications</div>
+      <div class="mobile-menu-item" data-page="messages">Messages</div>
+      <div class="mobile-menu-item" id="settingsMenuBtnMobile">Settings</div>
     </div>
 
     <div class="main-layout">
       <div class="left-menu">
-        <div class="left-menu-item" data-page="profile">Моя страница</div>
-        <div class="left-menu-item" data-page="feed">Новости</div>
-        <div class="left-menu-item" data-page="friends">Друзья</div>
-        <div class="left-menu-item" data-page="notifications">🔔 Уведомления</div>
-        <div class="left-menu-item" data-page="messages">Сообщения</div>
-        <div class="left-menu-item" id="settingsMenuBtn">Настройки</div>
+        <div class="left-menu-item" data-page="profile">My Profile</div>
+        <div class="left-menu-item" data-page="feed">News Feed</div>
+        <div class="left-menu-item" data-page="friends">Friends</div>
+        <div class="left-menu-item" data-page="notifications">Notifications</div>
+        <div class="left-menu-item" data-page="messages">Messages</div>
+        <div class="left-menu-item" id="settingsMenuBtn">Settings</div>
       </div>
       <div class="content-area" id="contentArea"></div>
     </div>
@@ -623,12 +624,10 @@
     }
   }
   
-  // Лайк поста
-  async function toggleLike(postId, postUserId) {
+  async function toggleLike(postId) {
     const postRef = doc(db, 'posts', postId);
     const postSnap = await getDoc(postRef);
     if (!postSnap.exists()) return;
-    
     const post = postSnap.data();
     const likedBy = post.likedBy || [];
     
@@ -645,7 +644,6 @@
     }
   }
   
-  // Комментарий
   async function addComment(postId, text) {
     if (!text.trim()) return;
     await addDoc(collection(db, 'comments'), {
@@ -683,21 +681,21 @@
     loadSettings();
     updateNotificationBadge();
     renderPage('profile');
-    showToast(`Добро пожаловать, ${currentUserData.name}!`);
+    showToast(`Welcome, ${currentUserData.name}!`);
   }
   
   async function sendFriendRequest(toUserId, toUserName) {
-    if (toUserId === currentUserData.uid) return showToast('Нельзя себе', true);
-    if (currentUserData.friends.includes(toUserId)) return showToast('Уже в друзьях', true);
+    if (toUserId === currentUserData.uid) return showToast('Cannot add yourself', true);
+    if (currentUserData.friends.includes(toUserId)) return showToast('Already friends', true);
     const q = query(collection(db, 'friendRequests'), where('fromUserId', '==', currentUserData.uid), where('toUserId', '==', toUserId), where('status', '==', 'pending'));
     const existing = await getDocs(q);
-    if (!existing.empty) return showToast('Заявка уже отправлена', true);
+    if (!existing.empty) return showToast('Request already sent', true);
     await addDoc(collection(db, 'friendRequests'), {
       fromUserId: currentUserData.uid, fromUserName: currentUserData.name,
       toUserId: toUserId, toUserName: toUserName,
       status: 'pending', createdAt: serverTimestamp()
     });
-    showToast(`Заявка отправлена ${toUserName}`);
+    showToast(`Friend request sent to ${toUserName}`);
   }
   
   async function acceptFriendRequest(requestId, fromUserId, fromUserName) {
@@ -714,7 +712,7 @@
         createdAt: serverTimestamp()
       });
     }
-    showToast(`${fromUserName} теперь ваш друг!`);
+    showToast(`${fromUserName} is now your friend!`);
     updateNotificationBadge();
     if (currentPage === 'notifications') renderNotifications();
     if (currentPage === 'friends') renderFriends();
@@ -729,7 +727,7 @@
   async function removeFriend(friendId) {
     await updateDoc(doc(db, 'users', currentUserData.uid), { friends: arrayRemove(friendId) });
     currentUserData.friends = currentUserData.friends.filter(id => id !== friendId);
-    showToast('Друг удалён');
+    showToast('Friend removed');
   }
   
   async function createPost(text) {
@@ -744,7 +742,7 @@
   
   async function sendMessage(chatId, text, toUserId) {
     if (!text.trim() || !currentUserData.friends.includes(toUserId)) {
-      if (!currentUserData.friends.includes(toUserId)) showToast('Писать можно только друзьям!', true);
+      if (!currentUserData.friends.includes(toUserId)) showToast('You can only message friends!', true);
       return false;
     }
     await addDoc(collection(db, 'messages'), {
@@ -755,12 +753,11 @@
     return true;
   }
   
-  // Рендер поста с лайками и комментариями
-  function renderPost(post, postId, isOwnPage = false) {
+  function renderPost(post, postId) {
     const isLiked = (post.likedBy || []).includes(currentUserData.uid);
     const likesCount = post.likesCount || 0;
-    const dateStr = post.createdAt?.toDate().toLocaleString('ru-RU') || 'Только что';
-    const postHTML = `
+    const dateStr = post.createdAt?.toDate().toLocaleString('ru-RU') || 'Just now';
+    return `
       <div class="post-item animate-fade-up" data-post-id="${postId}">
         <div class="post-header">
           <div class="post-avatar">${escapeHtml((post.authorName || 'U').charAt(0).toUpperCase())}</div>
@@ -782,13 +779,12 @@
         <div class="comments-section" data-post-id="${postId}">
           <div class="comments-list" id="comments-list-${postId}"></div>
           <div class="comment-input-area">
-            <input type="text" class="comment-input" placeholder="Написать комментарий..." data-post-id="${postId}">
-            <button class="comment-submit" data-post-id="${postId}">→</button>
+            <input type="text" class="comment-input" placeholder="Write a comment..." data-post-id="${postId}">
+            <button class="comment-submit" data-post-id="${postId}">Send</button>
           </div>
         </div>
       </div>
     `;
-    return { html: postHTML, postId: postId };
   }
   
   async function loadComments(postId, containerId) {
@@ -802,7 +798,7 @@
       if (commentsCountSpan) commentsCountSpan.textContent = commentCount;
       
       if (comments.length === 0) {
-        container.innerHTML = '<div style="padding:8px; color:var(--text-light); text-align:center;">Нет комментариев</div>';
+        container.innerHTML = '<div style="padding:8px; color:var(--text-light); text-align:center;">No comments yet</div>';
       } else {
         container.innerHTML = comments.map(c => `
           <div class="comment-item">
@@ -816,6 +812,47 @@
     return unsubscribe;
   }
   
+  async function attachPostHandlers(container) {
+    container.querySelectorAll('.like-btn').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        const postId = btn.dataset.postId;
+        await toggleLike(postId);
+      });
+    });
+    
+    container.querySelectorAll('.comment-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const postId = btn.dataset.postId;
+        const section = container.querySelector(`.comments-section[data-post-id="${postId}"]`);
+        if (section) section.classList.toggle('open');
+      });
+    });
+    
+    container.querySelectorAll('.comment-submit').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const postId = btn.dataset.postId;
+        const input = container.querySelector(`.comment-input[data-post-id="${postId}"]`);
+        if (input && input.value.trim()) {
+          await addComment(postId, input.value);
+          input.value = '';
+        }
+      });
+    });
+    
+    container.querySelectorAll('.comment-input').forEach(input => {
+      input.addEventListener('keypress', async (e) => {
+        if (e.key === 'Enter') {
+          const postId = input.dataset.postId;
+          if (input.value.trim()) {
+            await addComment(postId, input.value);
+            input.value = '';
+          }
+        }
+      });
+    });
+  }
+  
   async function renderFeed() {
     const contentArea = document.getElementById('contentArea');
     contentArea.innerHTML = '<div class="post-feed" id="feedPosts"></div>';
@@ -826,55 +863,17 @@
       if (!container) return;
       const posts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       if (posts.length === 0) {
-        container.innerHTML = '<p style="color:var(--text-secondary); text-align:center; padding:40px;">Новостей пока нет</p>';
+        container.innerHTML = '<p style="color:var(--text-secondary); text-align:center; padding:40px;">No posts yet</p>';
         return;
       }
       
       container.innerHTML = '';
       for (const post of posts) {
-        const { html, postId } = renderPost(post, post.id);
+        const html = renderPost(post, post.id);
         container.insertAdjacentHTML('beforeend', html);
-        
-        // Добавляем комментарии
-        const commentsSection = container.querySelector(`.comments-section[data-post-id="${postId}"]`);
-        const likeBtn = container.querySelector(`.like-btn[data-post-id="${postId}"]`);
-        const commentBtn = container.querySelector(`.comment-btn[data-post-id="${postId}"]`);
-        const commentSubmit = container.querySelector(`.comment-submit[data-post-id="${postId}"]`);
-        const commentInput = container.querySelector(`.comment-input[data-post-id="${postId}"]`);
-        
-        // Загружаем комментарии
-        await loadComments(postId, `comments-list-${postId}`);
-        
-        // Лайк
-        likeBtn?.addEventListener('click', async (e) => {
-          e.stopPropagation();
-          await toggleLike(postId, post.userId);
-        });
-        
-        // Показать/скрыть комментарии
-        commentBtn?.addEventListener('click', () => {
-          commentsSection?.classList.toggle('open');
-        });
-        
-        // Отправить комментарий
-        commentSubmit?.addEventListener('click', async () => {
-          const text = commentInput?.value;
-          if (text.trim()) {
-            await addComment(postId, text);
-            commentInput.value = '';
-          }
-        });
-        
-        commentInput?.addEventListener('keypress', async (e) => {
-          if (e.key === 'Enter') {
-            const text = commentInput.value;
-            if (text.trim()) {
-              await addComment(postId, text);
-              commentInput.value = '';
-            }
-          }
-        });
+        await loadComments(post.id, `comments-list-${post.id}`);
       }
+      await attachPostHandlers(container);
     });
     
     if (postsUnsubscribe) postsUnsubscribe();
@@ -890,13 +889,13 @@
           <div class="profile-details">
             <h2>${escapeHtml(currentUserData.name)}</h2>
             <div class="email">${escapeHtml(currentUserData.email)}</div>
-            <div class="email">👥 Друзей: ${currentUserData.friends.length}</div>
+            <div class="email">Friends: ${currentUserData.friends.length}</div>
           </div>
         </div>
       </div>
       <div class="post-creator animate-fade-up">
-        <textarea id="newPostText" placeholder="Что нового?"></textarea>
-        <button class="btn btn-primary" id="publishPostBtn">Опубликовать</button>
+        <textarea id="newPostText" placeholder="What's new?"></textarea>
+        <button class="btn btn-primary" id="publishPostBtn">Publish</button>
       </div>
       <div class="post-feed" id="profilePosts"></div>
     `;
@@ -905,7 +904,7 @@
       const text = document.getElementById('newPostText').value;
       if (await createPost(text)) {
         document.getElementById('newPostText').value = '';
-        showToast('Пост опубликован!');
+        showToast('Post published!');
       }
     });
     
@@ -915,48 +914,17 @@
       if (!container) return;
       const posts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       if (posts.length === 0) {
-        container.innerHTML = '<p style="color:var(--text-secondary); text-align:center; padding:40px;">У вас пока нет постов</p>';
+        container.innerHTML = '<p style="color:var(--text-secondary); text-align:center; padding:40px;">No posts yet</p>';
         return;
       }
       
       container.innerHTML = '';
       for (const post of posts) {
-        const { html, postId } = renderPost(post, post.id, true);
+        const html = renderPost(post, post.id);
         container.insertAdjacentHTML('beforeend', html);
-        
-        const commentsSection = container.querySelector(`.comments-section[data-post-id="${postId}"]`);
-        const likeBtn = container.querySelector(`.like-btn[data-post-id="${postId}"]`);
-        const commentBtn = container.querySelector(`.comment-btn[data-post-id="${postId}"]`);
-        const commentSubmit = container.querySelector(`.comment-submit[data-post-id="${postId}"]`);
-        const commentInput = container.querySelector(`.comment-input[data-post-id="${postId}"]`);
-        
-        await loadComments(postId, `comments-list-${postId}`);
-        
-        likeBtn?.addEventListener('click', async (e) => {
-          e.stopPropagation();
-          await toggleLike(postId, post.userId);
-        });
-        
-        commentBtn?.addEventListener('click', () => commentsSection?.classList.toggle('open'));
-        
-        commentSubmit?.addEventListener('click', async () => {
-          const text = commentInput?.value;
-          if (text.trim()) {
-            await addComment(postId, text);
-            commentInput.value = '';
-          }
-        });
-        
-        commentInput?.addEventListener('keypress', async (e) => {
-          if (e.key === 'Enter') {
-            const text = commentInput.value;
-            if (text.trim()) {
-              await addComment(postId, text);
-              commentInput.value = '';
-            }
-          }
-        });
+        await loadComments(post.id, `comments-list-${post.id}`);
       }
+      await attachPostHandlers(container);
     });
     
     if (postsUnsubscribe) postsUnsubscribe();
@@ -967,16 +935,16 @@
     const contentArea = document.getElementById('contentArea');
     contentArea.innerHTML = `
       <div class="settings-panel animate-fade-up">
-        <h3 style="margin-bottom:16px;">👥 Мои друзья (${currentUserData.friends.length})</h3>
+        <h3 style="margin-bottom:16px;">My Friends (${currentUserData.friends.length})</h3>
         <div id="friendsList" class="friends-list"></div>
-        <h3 style="margin:24px 0 16px;">🔍 Найти пользователей</h3>
-        <input type="text" id="searchUserInput" class="search-user-input" placeholder="Email или имя">
+        <h3 style="margin:24px 0 16px;">Find Users</h3>
+        <input type="text" id="searchUserInput" class="search-user-input" placeholder="Email or name">
         <div id="searchResults"></div>
       </div>
     `;
     
     if (currentUserData.friends.length === 0) {
-      document.getElementById('friendsList').innerHTML = '<p style="color:var(--text-secondary);">У вас пока нет друзей</p>';
+      document.getElementById('friendsList').innerHTML = '<p style="color:var(--text-secondary);">You have no friends yet</p>';
     } else {
       const friendsList = [];
       for (const friendId of currentUserData.friends) {
@@ -985,7 +953,7 @@
       }
       document.getElementById('friendsList').innerHTML = friendsList.map(f => `
         <div class="friend-item"><div><strong>${escapeHtml(f.name)}</strong><br><small>${escapeHtml(f.email)}</small></div>
-        <button class="btn btn-danger remove-friend" data-id="${f.id}">Удалить</button></div>
+        <button class="btn btn-danger remove-friend" data-id="${f.id}">Remove</button></div>
       `).join('');
       document.querySelectorAll('.remove-friend').forEach(btn => {
         btn.addEventListener('click', async () => { await removeFriend(btn.dataset.id); renderFriends(); });
@@ -1005,11 +973,11 @@
       nameSnap.docs.forEach(doc => usersMap.set(doc.id, doc.data()));
       const users = Array.from(usersMap.values()).filter(u => u.uid !== currentUserData.uid);
       const resultsDiv = document.getElementById('searchResults');
-      if (users.length === 0) resultsDiv.innerHTML = '<p style="color:var(--text-secondary);">Не найдены</p>';
+      if (users.length === 0) resultsDiv.innerHTML = '<p style="color:var(--text-secondary);">No users found</p>';
       else resultsDiv.innerHTML = users.map(user => `
         <div class="user-search-result"><div><strong>${escapeHtml(user.name)}</strong><br><small>${escapeHtml(user.email)}</small></div>
-        ${currentUserData.friends.includes(user.uid) ? '<button class="btn btn-danger" disabled>✓ В друзьях</button>' :
-          `<button class="btn btn-primary send-request" data-id="${user.uid}" data-name="${escapeHtml(user.name)}">➕ Добавить</button>`}</div>
+        ${currentUserData.friends.includes(user.uid) ? '<button class="btn btn-danger" disabled>Already friends</button>' :
+          `<button class="btn btn-primary send-request" data-id="${user.uid}" data-name="${escapeHtml(user.name)}">Add Friend</button>`}</div>
       `).join('');
       document.querySelectorAll('.send-request').forEach(btn => {
         btn.addEventListener('click', () => sendFriendRequest(btn.dataset.id, btn.dataset.name));
@@ -1019,7 +987,7 @@
   
   async function renderNotifications() {
     const contentArea = document.getElementById('contentArea');
-    contentArea.innerHTML = `<div class="notifications-panel animate-fade-up"><h3>🔔 Уведомления</h3><div id="notificationsList"></div></div>`;
+    contentArea.innerHTML = `<div class="notifications-panel animate-fade-up"><h3>Notifications</h3><div id="notificationsList"></div></div>`;
     
     const q = query(collection(db, 'friendRequests'), where('toUserId', '==', currentUserData.uid), where('status', '==', 'pending'), orderBy('createdAt', 'desc'));
     const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -1027,14 +995,14 @@
       if (!container) return;
       const requests = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       if (requests.length === 0) {
-        container.innerHTML = '<div class="empty-notifications">✨ Нет новых уведомлений</div>';
+        container.innerHTML = '<div class="empty-notifications">No new notifications</div>';
       } else {
         container.innerHTML = requests.map(req => `
           <div class="notification-item animate-slide-left">
-            <div class="notification-info"><strong>${escapeHtml(req.fromUserName)}</strong><p>📨 Хочет добавить вас в друзья</p></div>
+            <div class="notification-info"><strong>${escapeHtml(req.fromUserName)}</strong><p>Wants to add you as a friend</p></div>
             <div class="notification-actions">
-              <button class="btn-success accept" data-id="${req.id}" data-from-id="${req.fromUserId}" data-from-name="${escapeHtml(req.fromUserName)}">✅ Принять</button>
-              <button class="btn-warning reject" data-id="${req.id}">❌ Отклонить</button>
+              <button class="btn-success accept" data-id="${req.id}" data-from-id="${req.fromUserId}" data-from-name="${escapeHtml(req.fromUserName)}">Accept</button>
+              <button class="btn-warning reject" data-id="${req.id}">Decline</button>
             </div>
           </div>
         `).join('');
@@ -1062,14 +1030,14 @@
         const otherId = chat.participants.find(id => id !== currentUserData.uid);
         if (otherId && currentUserData.friends.includes(otherId)) {
           const userSnap = await getDoc(doc(db, 'users', otherId));
-          const name = userSnap.exists() ? userSnap.data().name : 'Пользователь';
+          const name = userSnap.exists() ? userSnap.data().name : 'User';
           if (name.toLowerCase().includes(filter.toLowerCase())) {
             processed.push({ id: docSnap.id, ...chat, otherName: name, otherId });
           }
         }
       }
       if (processed.length === 0) {
-        container.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text-light);">Нет чатов</div>';
+        container.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text-light);">No chats</div>';
         return;
       }
       container.innerHTML = processed.map(chat => `
@@ -1095,7 +1063,7 @@
     chatWindow.innerHTML = `
       <div style="padding:12px; border-bottom:1px solid var(--border);"><strong>${escapeHtml(otherName)}</strong></div>
       <div class="messages-container" id="chatMessages"></div>
-      <div class="chat-input-area"><input type="text" id="msgInput" placeholder="Сообщение..."><button class="send-btn" id="sendBtn">→</button></div>
+      <div class="chat-input-area"><input type="text" id="msgInput" placeholder="Type a message..."><button class="send-btn" id="sendBtn">Send</button></div>
     `;
     const q = query(collection(db, 'messages'), where('chatId', '==', chatId), orderBy('createdAt', 'asc'));
     const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -1106,7 +1074,7 @@
         const isOwn = m.fromUserId === currentUserData.uid;
         const time = m.createdAt?.toDate().toLocaleTimeString('ru-RU', {hour:'2-digit', minute:'2-digit'}) || '';
         return `<div class="message-bubble ${isOwn ? 'own' : ''} animate-message">
-          <div class="message-sender">${isOwn ? 'Вы' : escapeHtml(m.fromUserName)}</div>
+          <div class="message-sender">${isOwn ? 'You' : escapeHtml(m.fromUserName)}</div>
           <div>${escapeHtml(m.text)}</div>
           <div class="message-time">${time}</div>
         </div>`;
@@ -1130,11 +1098,11 @@
     contentArea.innerHTML = `
       <div class="chat-layout">
         <div class="chat-list-panel">
-          <div class="chat-search"><input type="text" placeholder="Поиск" id="chatSearch"></div>
+          <div class="chat-search"><input type="text" placeholder="Search" id="chatSearch"></div>
           <div class="chat-contacts" id="chatContactsList"></div>
-          <div style="padding:12px;text-align:center;color:var(--text-light);font-size:11px;">💡 Только друзья</div>
+          <div style="padding:12px;text-align:center;color:var(--text-light);font-size:11px;">Only friends</div>
         </div>
-        <div class="chat-window" id="chatWindow"><div style="flex:1;display:flex;align-items:center;justify-content:center;">Выберите чат</div></div>
+        <div class="chat-window" id="chatWindow"><div style="flex:1;display:flex;align-items:center;justify-content:center;">Select a chat</div></div>
       </div>
     `;
     await loadChatList();
@@ -1147,27 +1115,26 @@
     const animOn = localStorage.getItem('animations') !== 'off';
     contentArea.innerHTML = `
       <div class="settings-panel animate-fade-up">
-        <h3 style="margin-bottom:20px;">⚙️ Настройки</h3>
-        <div class="setting-item"><div><strong>🌙 Тема</strong><br><small>Светлая/тёмная</small></div>
-        <div><button class="theme-btn ${currentTheme === 'light' ? 'active' : ''}" data-theme="light">Светлая</button>
-        <button class="theme-btn ${currentTheme === 'dark' ? 'active' : ''}" data-theme="dark">Тёмная</button></div></div>
-        <div class="setting-item"><div><strong>✨ Анимации</strong><br><small>Вкл/Выкл</small></div>
-        <div><button class="animation-toggle ${animOn ? 'active' : ''}" data-anim="on">Вкл</button>
-        <button class="animation-toggle ${!animOn ? 'active' : ''}" data-anim="off">Выкл</button></div></div>
-        <div class="setting-item"><div><strong>👤 Аккаунт</strong><br><small>ID: ${currentUserData.uid.substring(0, 12)}...</small></div></div>
+        <h3 style="margin-bottom:20px;">Settings</h3>
+        <div class="setting-item"><div><strong>Theme</strong><br><small>Light / Dark</small></div>
+        <div><button class="theme-btn ${currentTheme === 'light' ? 'active' : ''}" data-theme="light">Light</button>
+        <button class="theme-btn ${currentTheme === 'dark' ? 'active' : ''}" data-theme="dark">Dark</button></div></div>
+        <div class="setting-item"><div><strong>Animations</strong><br><small>On / Off</small></div>
+        <div><button class="animation-toggle ${animOn ? 'active' : ''}" data-anim="on">On</button>
+        <button class="animation-toggle ${!animOn ? 'active' : ''}" data-anim="off">Off</button></div></div>
+        <div class="setting-item"><div><strong>Account</strong><br><small>ID: ${currentUserData.uid.substring(0, 12)}...</small></div></div>
       </div>
     `;
     document.querySelectorAll('.theme-btn').forEach(btn => {
-      btn.addEventListener('click', () => { saveTheme(btn.dataset.theme); renderSettings(); showToast(`Тема: ${btn.dataset.theme === 'light' ? 'светлая' : 'тёмная'}`); });
+      btn.addEventListener('click', () => { saveTheme(btn.dataset.theme); renderSettings(); showToast(`Theme: ${btn.dataset.theme === 'light' ? 'Light' : 'Dark'}`); });
     });
     document.querySelectorAll('.animation-toggle').forEach(btn => {
-      btn.addEventListener('click', () => { saveAnimations(btn.dataset.anim === 'on'); renderSettings(); showToast(btn.dataset.anim === 'on' ? 'Анимации включены' : 'Анимации выключены'); });
+      btn.addEventListener('click', () => { saveAnimations(btn.dataset.anim === 'on'); renderSettings(); showToast(btn.dataset.anim === 'on' ? 'Animations on' : 'Animations off'); });
     });
   }
   
   async function renderPage(page) {
     currentPage = page;
-    if (window.notifUnsub && page !== 'notifications') {}
     switch(page) {
       case 'profile': await renderProfile(); break;
       case 'feed': await renderFeed(); break;
@@ -1182,11 +1149,14 @@
   function navigateTo(page) {
     currentPage = page;
     document.querySelectorAll('.header-nav span').forEach(s => s.classList.remove('active'));
-    document.querySelector(`.header-nav span[data-page="${page}"]`)?.classList.add('active');
+    const targetSpan = document.querySelector(`.header-nav span[data-page="${page}"]`);
+    if (targetSpan) targetSpan.classList.add('active');
     document.querySelectorAll('.left-menu-item[data-page]').forEach(i => i.classList.remove('active'));
-    document.querySelector(`.left-menu-item[data-page="${page}"]`)?.classList.add('active');
+    const targetLeft = document.querySelector(`.left-menu-item[data-page="${page}"]`);
+    if (targetLeft) targetLeft.classList.add('active');
     document.querySelectorAll('.mobile-menu-item[data-page]').forEach(i => i.classList.remove('active'));
-    document.querySelector(`.mobile-menu-item[data-page="${page}"]`)?.classList.add('active');
+    const targetMobile = document.querySelector(`.mobile-menu-item[data-page="${page}"]`);
+    if (targetMobile) targetMobile.classList.add('active');
     renderPage(page);
   }
   
@@ -1204,7 +1174,7 @@
   document.getElementById('registerEmailBtn')?.addEventListener('click', async () => {
     const email = document.getElementById('registerEmail').value;
     const password = document.getElementById('registerPassword').value;
-    if (password.length < 6) return showToast('Пароль минимум 6 символов', true);
+    if (password.length < 6) return showToast('Password must be at least 6 characters', true);
     try { await createUserProfile((await createUserWithEmailAndPassword(auth, email, password)).user); }
     catch(e) { showToast(e.message, true); }
   });
