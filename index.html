@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="theme-color" content="#4a6d8c">
-  <meta name="apple-mobile-web-app-capable" content="yes">
   <title>MiS-MaS</title>
   
   <!-- Firebase SDK -->
@@ -30,7 +29,7 @@
     const db = getFirestore(app);
     const googleProvider = new GoogleAuthProvider();
 
-    window.firebaseApp = { app, auth, db, googleProvider, signInWithPopup, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, collection, addDoc, query, orderBy, onSnapshot, doc, setDoc, getDoc, updateDoc, arrayUnion, arrayRemove, where, getDocs, serverTimestamp, deleteDoc };
+    window.firebaseApp = { app, auth, db, googleProvider };
   </script>
   
   <style>
@@ -59,7 +58,12 @@
     }
     @keyframes badgePulse {
       0%, 100% { transform: scale(1); }
-      50% { transform: scale(1.2); }
+      50% { transform: scale(1.3); background: #ff4444; }
+    }
+    @keyframes likeHeart {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.3); color: #e74c3c; }
+      100% { transform: scale(1); }
     }
     
     .animate-fade-up { animation: fadeInUp 0.3s ease-out forwards; }
@@ -67,11 +71,13 @@
     .animate-slide-left { animation: slideInLeft 0.3s ease-out forwards; }
     .animate-slide-right { animation: slideInRight 0.3s ease-out forwards; }
     .animate-message { animation: messageSlide 0.2s ease-out forwards; }
+    .animate-like { animation: likeHeart 0.3s ease-out; }
     body.animations-off .animate-fade-up,
     body.animations-off .animate-fade-scale,
     body.animations-off .animate-slide-left,
     body.animations-off .animate-slide-right,
-    body.animations-off .animate-message {
+    body.animations-off .animate-message,
+    body.animations-off .animate-like {
       animation: none !important;
     }
     
@@ -94,6 +100,7 @@
       --danger: #dc3545;
       --success: #28a745;
       --warning: #ffc107;
+      --like-color: #e74c3c;
       --shadow: 0 2px 8px rgba(0,0,0,0.05);
       --radius-card: 16px;
       --radius-btn: 12px;
@@ -128,21 +135,32 @@
     
     .app { max-width: 100%; margin: 0 auto; width: 100%; min-height: 100vh; display: flex; flex-direction: column; }
     
-    /* Бейдж уведомлений */
+    /* Бейдж уведомлений - ИСПРАВЛЕНО: не обрезается */
     .nav-item-with-badge {
       position: relative;
+      display: inline-flex;
+      align-items: center;
     }
     .notification-badge {
       position: absolute;
-      top: -5px;
-      right: -10px;
-      background: var(--danger);
+      top: -8px;
+      right: -12px;
+      background: #dc3545;
       color: white;
       font-size: 10px;
       font-weight: bold;
-      padding: 2px 6px;
+      min-width: 18px;
+      height: 18px;
+      padding: 0 5px;
       border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       animation: badgePulse 0.5s ease-in-out;
+      z-index: 10;
+    }
+    .notification-badge.hidden {
+      display: none;
     }
     
     /* Регистрация */
@@ -207,8 +225,8 @@
       position: sticky; top: 0; z-index: 100;
     }
     .header-logo { font-size: 20px; font-weight: 700; cursor: pointer; }
-    .header-nav { display: flex; gap: 16px; font-size: 13px; }
-    .header-nav span { cursor: pointer; opacity: 0.8; padding: 6px 0; white-space: nowrap; position: relative; }
+    .header-nav { display: flex; gap: 20px; font-size: 13px; align-items: center; }
+    .header-nav span { cursor: pointer; opacity: 0.8; padding: 6px 0; white-space: nowrap; position: relative; display: inline-block; }
     .header-nav span.active { opacity: 1; font-weight: 600; border-bottom: 2px solid white; }
     .logout-btn { background: rgba(255,255,255,0.15); border: none; padding: 6px 12px; border-radius: 20px; color: white; cursor: pointer; font-size: 12px; }
     
@@ -229,39 +247,112 @@
     .left-menu-item.active { background: var(--hover); border-left-color: var(--accent); }
     .content-area { flex: 1; padding: 16px; overflow-y: auto; min-height: calc(100vh - 56px); }
     
-    /* Профиль */
-    .profile-header, .post-creator, .post-item, .chat-layout, .settings-panel, .notifications-panel {
+    /* Посты */
+    .post-feed { display: flex; flex-direction: column; gap: 16px; }
+    .post-item {
       background: var(--bg-card); border-radius: var(--radius-card);
-      margin-bottom: 16px; padding: 20px; box-shadow: var(--shadow);
-      border: 1px solid var(--border);
+      padding: 16px; box-shadow: var(--shadow); border: 1px solid var(--border);
     }
-    .profile-info { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
-    .profile-avatar {
-      width: 70px; height: 70px; border-radius: 50%;
-      background: linear-gradient(135deg, var(--accent), #2c4c6e);
-      display: flex; align-items: center; justify-content: center; font-size: 28px; color: white;
-    }
-    .profile-details h2 { font-size: 20px; margin-bottom: 4px; }
-    .profile-details .email { font-size: 12px; color: var(--text-secondary); }
-    .post-creator textarea {
-      width: 100%; border: 1px solid var(--border-input); background: var(--bg-card);
-      color: var(--text-primary); padding: 12px; border-radius: var(--radius-btn);
-      resize: vertical; min-height: 70px; font-family: inherit; font-size: 14px;
-      margin-bottom: 12px;
-    }
-    .post-feed { display: flex; flex-direction: column; gap: 12px; }
-    .post-author { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
-    .post-author-avatar {
-      width: 40px; height: 40px; border-radius: 50%;
+    .post-header { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+    .post-avatar {
+      width: 44px; height: 44px; border-radius: 50%;
       background: linear-gradient(135deg, var(--accent), #2c4c6e);
       display: flex; align-items: center; justify-content: center; color: white; font-weight: bold;
-      font-size: 16px;
+      font-size: 18px;
     }
-    .post-author-name { font-weight: 600; color: var(--accent); font-size: 14px; }
-    .post-date { font-size: 10px; color: var(--text-light); margin-top: 2px; }
-    .post-text { font-size: 14px; line-height: 1.5; }
+    .post-author { font-weight: 600; color: var(--accent); font-size: 15px; }
+    .post-date { font-size: 11px; color: var(--text-light); margin-top: 2px; }
+    .post-text { font-size: 15px; line-height: 1.5; margin-bottom: 12px; }
+    
+    /* Лайки */
+    .post-actions {
+      display: flex;
+      gap: 20px;
+      padding: 10px 0;
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 12px;
+    }
+    .like-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 16px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--text-secondary);
+      transition: all 0.2s;
+      padding: 5px 10px;
+      border-radius: var(--radius-btn);
+    }
+    .like-btn:hover { background: var(--hover); }
+    .like-btn.liked { color: var(--like-color); }
+    .like-btn.liked .like-icon { animation: likeHeart 0.3s ease-out; }
+    .like-icon { font-size: 18px; }
+    .comment-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 16px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--text-secondary);
+      padding: 5px 10px;
+      border-radius: var(--radius-btn);
+    }
+    .comment-btn:hover { background: var(--hover); }
+    
+    /* Комментарии */
+    .comments-section {
+      margin-top: 12px;
+      display: none;
+    }
+    .comments-section.open { display: block; }
+    .comments-list {
+      max-height: 200px;
+      overflow-y: auto;
+      margin-bottom: 10px;
+      padding-right: 8px;
+    }
+    .comment-item {
+      padding: 8px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 13px;
+    }
+    .comment-author {
+      font-weight: 600;
+      color: var(--accent);
+      margin-right: 8px;
+    }
+    .comment-text { color: var(--text-primary); }
+    .comment-time { font-size: 10px; color: var(--text-light); margin-top: 2px; }
+    .comment-input-area {
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
+    }
+    .comment-input {
+      flex: 1;
+      padding: 8px 12px;
+      border: 1px solid var(--border-input);
+      background: var(--bg-card);
+      color: var(--text-primary);
+      border-radius: var(--radius-btn);
+      font-size: 13px;
+    }
+    .comment-submit {
+      padding: 8px 16px;
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: var(--radius-btn);
+      cursor: pointer;
+    }
     
     /* Уведомления */
+    .notifications-panel { background: var(--bg-card); border-radius: var(--radius-card); padding: 20px; box-shadow: var(--shadow); border: 1px solid var(--border); }
     .notifications-panel h3 { margin-bottom: 16px; color: var(--text-primary); }
     .notification-item {
       display: flex;
@@ -275,13 +366,12 @@
     .notification-info strong { color: var(--accent); }
     .notification-info p { margin-top: 4px; font-size: 12px; color: var(--text-secondary); }
     .notification-actions { display: flex; gap: 8px; }
-    .notification-actions button { padding: 8px 16px; font-size: 12px; }
-    .btn-success { background: var(--success); color: white; border: none; border-radius: var(--radius-btn); cursor: pointer; }
-    .btn-warning { background: var(--warning); color: #333; border: none; border-radius: var(--radius-btn); cursor: pointer; }
+    .btn-success { background: var(--success); color: white; border: none; border-radius: var(--radius-btn); cursor: pointer; padding: 8px 16px; }
+    .btn-warning { background: var(--warning); color: #333; border: none; border-radius: var(--radius-btn); cursor: pointer; padding: 8px 16px; }
     .empty-notifications { text-align: center; padding: 40px; color: var(--text-secondary); }
     
     /* Чат */
-    .chat-layout { display: flex; flex-direction: column; padding: 0; overflow: hidden; min-height: 500px; }
+    .chat-layout { background: var(--bg-card); border-radius: var(--radius-card); display: flex; flex-direction: column; overflow: hidden; min-height: 500px; border: 1px solid var(--border); }
     .chat-list-panel { width: 100%; border-right: none; border-bottom: 1px solid var(--border); }
     .chat-search { padding: 12px; border-bottom: 1px solid var(--border); }
     .chat-search input {
@@ -318,19 +408,25 @@
     .btn, .send-btn { padding: 10px 18px; border: none; cursor: pointer; font-weight: 500; border-radius: var(--radius-btn); transition: opacity 0.2s; }
     .btn-primary { background: var(--accent); color: white; }
     .btn-danger { background: var(--danger); color: white; }
-    .btn-success { background: var(--success); color: white; }
     .send-btn { background: var(--accent); color: white; }
     
-    /* Настройки */
-    .settings-panel { padding: 20px; }
+    /* Настройки и друзья */
+    .settings-panel { background: var(--bg-card); border-radius: var(--radius-card); padding: 20px; border: 1px solid var(--border); }
     .setting-item { display: flex; justify-content: space-between; align-items: center; padding: 14px 0; border-bottom: 1px solid var(--border); flex-wrap: wrap; gap: 10px; }
     .theme-btn, .animation-toggle { padding: 8px 14px; margin-left: 6px; border: 1px solid var(--border-input); background: var(--bg-card); color: var(--text-primary); cursor: pointer; border-radius: var(--radius-btn); }
     .theme-btn.active, .animation-toggle.active { background: var(--accent); color: white; }
-    
-    /* Друзья */
     .friends-list { display: flex; flex-direction: column; gap: 10px; margin-top: 16px; }
     .friend-item, .user-search-result { display: flex; justify-content: space-between; align-items: center; padding: 12px; background: var(--bg-page); border-radius: var(--radius-card); flex-wrap: wrap; gap: 10px; }
     .search-user-input { width: 100%; padding: 12px; border: 1px solid var(--border-input); background: var(--bg-card); color: var(--text-primary); border-radius: var(--radius-btn); margin-bottom: 12px; font-size: 14px; }
+    .profile-header { background: var(--bg-card); border-radius: var(--radius-card); padding: 20px; margin-bottom: 16px; border: 1px solid var(--border); }
+    .profile-info { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
+    .profile-avatar {
+      width: 70px; height: 70px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent), #2c4c6e);
+      display: flex; align-items: center; justify-content: center; font-size: 28px; color: white;
+    }
+    .post-creator { background: var(--bg-card); border-radius: var(--radius-card); padding: 16px; margin-bottom: 16px; border: 1px solid var(--border); }
+    .post-creator textarea { width: 100%; padding: 12px; border: 1px solid var(--border-input); background: var(--bg-card); color: var(--text-primary); border-radius: var(--radius-btn); resize: vertical; min-height: 70px; margin-bottom: 12px; font-family: inherit; font-size: 14px; }
     
     /* Toast */
     .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.8); color: white; padding: 10px 20px; border-radius: 30px; font-size: 13px; z-index: 3000; opacity: 0; transition: opacity 0.3s; pointer-events: none; max-width: 90%; text-align: center; }
@@ -341,9 +437,9 @@
     @media (max-width: 768px) {
       .left-menu { display: none; }
       .mobile-menu-btn { display: block; }
-      .header-nav { display: none; }
+      .header-nav { gap: 12px; }
+      .header-nav span { font-size: 12px; }
       .profile-info { flex-direction: column; text-align: center; }
-      .setting-item { flex-direction: column; align-items: flex-start; }
       .message-bubble { max-width: 90%; }
     }
     @media (min-width: 769px) {
@@ -412,7 +508,7 @@
         <span data-page="profile">Профиль</span>
         <span data-page="feed">Новости</span>
         <span data-page="friends">Друзья</span>
-        <span data-page="notifications" class="nav-item-with-badge" id="notificationsNav">Уведомления<span id="notificationBadge" class="notification-badge hidden">0</span></span>
+        <span data-page="notifications" class="nav-item-with-badge" id="notificationsNav">🔔<span id="notificationBadge" class="notification-badge hidden">0</span></span>
         <span data-page="messages">Чаты</span>
       </div>
       <button class="logout-btn" id="logoutBtn">Выйти</button>
@@ -424,7 +520,7 @@
       <div class="mobile-menu-item" data-page="profile">Моя страница</div>
       <div class="mobile-menu-item" data-page="feed">Новости</div>
       <div class="mobile-menu-item" data-page="friends">Друзья</div>
-      <div class="mobile-menu-item" data-page="notifications">Уведомления</div>
+      <div class="mobile-menu-item" data-page="notifications">🔔 Уведомления</div>
       <div class="mobile-menu-item" data-page="messages">Сообщения</div>
       <div class="mobile-menu-item" id="settingsMenuBtnMobile">Настройки</div>
     </div>
@@ -434,7 +530,7 @@
         <div class="left-menu-item" data-page="profile">Моя страница</div>
         <div class="left-menu-item" data-page="feed">Новости</div>
         <div class="left-menu-item" data-page="friends">Друзья</div>
-        <div class="left-menu-item" data-page="notifications">Уведомления</div>
+        <div class="left-menu-item" data-page="notifications">🔔 Уведомления</div>
         <div class="left-menu-item" data-page="messages">Сообщения</div>
         <div class="left-menu-item" id="settingsMenuBtn">Настройки</div>
       </div>
@@ -446,7 +542,6 @@
 <div id="toast" class="toast"></div>
 
 <script type="module">
-  // Импорт Firebase (упрощённый для краткости, полная логика ниже)
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
   import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-analytics.js";
   import { getAuth, signInWithPopup, GoogleAuthProvider, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
@@ -473,10 +568,7 @@
   let currentChatId = null;
   let currentChatUserId = null;
   let postsUnsubscribe = null;
-  let messagesUnsubscribe = null;
-  let notificationsUnsubscribe = null;
 
-  // Вспомогательные функции
   function showToast(msg, isError = false) {
     const toast = document.getElementById('toast');
     toast.textContent = msg;
@@ -515,7 +607,6 @@
     }
   }
   
-  // Обновление бейджа уведомлений
   async function updateNotificationBadge() {
     if (!currentUserData.uid) return;
     const q = query(collection(db, 'friendRequests'), where('toUserId', '==', currentUserData.uid), where('status', '==', 'pending'));
@@ -532,83 +623,38 @@
     }
   }
   
-  // Отправка заявки в друзья
-  async function sendFriendRequest(toUserId, toUserName) {
-    if (toUserId === currentUserData.uid) {
-      showToast('Нельзя отправить заявку самому себе', true);
-      return false;
-    }
-    if (currentUserData.friends.includes(toUserId)) {
-      showToast('Этот пользователь уже в друзьях', true);
-      return false;
-    }
-    // Проверка на уже отправленную заявку
-    const q = query(collection(db, 'friendRequests'), 
-      where('fromUserId', '==', currentUserData.uid),
-      where('toUserId', '==', toUserId),
-      where('status', '==', 'pending'));
-    const existing = await getDocs(q);
-    if (!existing.empty) {
-      showToast('Заявка уже отправлена', true);
-      return false;
-    }
+  // Лайк поста
+  async function toggleLike(postId, postUserId) {
+    const postRef = doc(db, 'posts', postId);
+    const postSnap = await getDoc(postRef);
+    if (!postSnap.exists()) return;
     
-    await addDoc(collection(db, 'friendRequests'), {
-      fromUserId: currentUserData.uid,
-      fromUserName: currentUserData.name,
-      toUserId: toUserId,
-      toUserName: toUserName,
-      status: 'pending',
-      createdAt: serverTimestamp()
-    });
-    showToast(`Заявка в друзья отправлена пользователю ${toUserName}`);
-    return true;
-  }
-  
-  // Принятие заявки
-  async function acceptFriendRequest(requestId, fromUserId, fromUserName) {
-    // Добавляем друг друга в друзья
-    const userRef = doc(db, 'users', currentUserData.uid);
-    await updateDoc(userRef, { friends: arrayUnion(fromUserId) });
+    const post = postSnap.data();
+    const likedBy = post.likedBy || [];
     
-    const fromUserRef = doc(db, 'users', fromUserId);
-    await updateDoc(fromUserRef, { friends: arrayUnion(currentUserData.uid) });
-    
-    // Обновляем локальные данные
-    currentUserData.friends.push(fromUserId);
-    
-    // Обновляем статус заявки
-    const requestRef = doc(db, 'friendRequests', requestId);
-    await updateDoc(requestRef, { status: 'accepted' });
-    
-    // Создаём чат
-    const chatId = [currentUserData.uid, fromUserId].sort().join('_');
-    const chatRef = doc(db, 'chats', chatId);
-    const chatSnap = await getDoc(chatRef);
-    if (!chatSnap.exists()) {
-      await setDoc(chatRef, {
-        participants: [currentUserData.uid, fromUserId],
-        participantNames: {
-          [currentUserData.uid]: currentUserData.name,
-          [fromUserId]: fromUserName
-        },
-        createdAt: serverTimestamp(),
-        lastUpdated: serverTimestamp()
+    if (likedBy.includes(currentUserData.uid)) {
+      await updateDoc(postRef, {
+        likedBy: arrayRemove(currentUserData.uid),
+        likesCount: (post.likesCount || 1) - 1
+      });
+    } else {
+      await updateDoc(postRef, {
+        likedBy: arrayUnion(currentUserData.uid),
+        likesCount: (post.likesCount || 0) + 1
       });
     }
-    
-    showToast(`${fromUserName} теперь ваш друг!`);
-    updateNotificationBadge();
-    if (currentPage === 'notifications') renderNotifications();
-    if (currentPage === 'friends') renderFriends();
   }
   
-  // Отклонение заявки
-  async function rejectFriendRequest(requestId) {
-    await deleteDoc(doc(db, 'friendRequests', requestId));
-    showToast('Заявка отклонена');
-    updateNotificationBadge();
-    if (currentPage === 'notifications') renderNotifications();
+  // Комментарий
+  async function addComment(postId, text) {
+    if (!text.trim()) return;
+    await addDoc(collection(db, 'comments'), {
+      postId: postId,
+      userId: currentUserData.uid,
+      userName: currentUserData.name,
+      text: text.trim(),
+      createdAt: serverTimestamp()
+    });
   }
   
   async function createUserProfile(user) {
@@ -626,7 +672,7 @@
     const userData = userSnap.exists() ? userSnap.data() : await (await getDoc(userRef)).data();
     currentUserData = {
       uid: user.uid,
-      name: userData.name || user.displayName || user.email.split('@')[0],
+      name: userData.name,
       email: user.email,
       friends: userData.friends || []
     };
@@ -640,100 +686,199 @@
     showToast(`Добро пожаловать, ${currentUserData.name}!`);
   }
   
+  async function sendFriendRequest(toUserId, toUserName) {
+    if (toUserId === currentUserData.uid) return showToast('Нельзя себе', true);
+    if (currentUserData.friends.includes(toUserId)) return showToast('Уже в друзьях', true);
+    const q = query(collection(db, 'friendRequests'), where('fromUserId', '==', currentUserData.uid), where('toUserId', '==', toUserId), where('status', '==', 'pending'));
+    const existing = await getDocs(q);
+    if (!existing.empty) return showToast('Заявка уже отправлена', true);
+    await addDoc(collection(db, 'friendRequests'), {
+      fromUserId: currentUserData.uid, fromUserName: currentUserData.name,
+      toUserId: toUserId, toUserName: toUserName,
+      status: 'pending', createdAt: serverTimestamp()
+    });
+    showToast(`Заявка отправлена ${toUserName}`);
+  }
+  
+  async function acceptFriendRequest(requestId, fromUserId, fromUserName) {
+    await updateDoc(doc(db, 'users', currentUserData.uid), { friends: arrayUnion(fromUserId) });
+    await updateDoc(doc(db, 'users', fromUserId), { friends: arrayUnion(currentUserData.uid) });
+    currentUserData.friends.push(fromUserId);
+    await updateDoc(doc(db, 'friendRequests', requestId), { status: 'accepted' });
+    const chatId = [currentUserData.uid, fromUserId].sort().join('_');
+    const chatRef = doc(db, 'chats', chatId);
+    if (!(await getDoc(chatRef)).exists()) {
+      await setDoc(chatRef, {
+        participants: [currentUserData.uid, fromUserId],
+        participantNames: { [currentUserData.uid]: currentUserData.name, [fromUserId]: fromUserName },
+        createdAt: serverTimestamp()
+      });
+    }
+    showToast(`${fromUserName} теперь ваш друг!`);
+    updateNotificationBadge();
+    if (currentPage === 'notifications') renderNotifications();
+    if (currentPage === 'friends') renderFriends();
+  }
+  
+  async function rejectFriendRequest(requestId) {
+    await deleteDoc(doc(db, 'friendRequests', requestId));
+    updateNotificationBadge();
+    if (currentPage === 'notifications') renderNotifications();
+  }
+  
   async function removeFriend(friendId) {
-    const userRef = doc(db, 'users', currentUserData.uid);
-    await updateDoc(userRef, { friends: arrayRemove(friendId) });
+    await updateDoc(doc(db, 'users', currentUserData.uid), { friends: arrayRemove(friendId) });
     currentUserData.friends = currentUserData.friends.filter(id => id !== friendId);
     showToast('Друг удалён');
   }
   
-  async function isFriend(userId) { return currentUserData.friends.includes(userId); }
-  
   async function createPost(text) {
     if (!text.trim()) return false;
-    try {
-      await addDoc(collection(db, 'posts'), {
-        userId: currentUserData.uid,
-        authorName: currentUserData.name,
-        text: text.trim(),
-        createdAt: serverTimestamp()
-      });
-      return true;
-    } catch(e) { return false; }
+    await addDoc(collection(db, 'posts'), {
+      userId: currentUserData.uid, authorName: currentUserData.name,
+      text: text.trim(), createdAt: serverTimestamp(),
+      likedBy: [], likesCount: 0
+    });
+    return true;
   }
   
   async function sendMessage(chatId, text, toUserId) {
-    if (!text.trim() || !chatId) return false;
-    if (!(await isFriend(toUserId))) {
-      showToast('Писать можно только друзьям!', true);
+    if (!text.trim() || !currentUserData.friends.includes(toUserId)) {
+      if (!currentUserData.friends.includes(toUserId)) showToast('Писать можно только друзьям!', true);
       return false;
     }
-    try {
-      await addDoc(collection(db, 'messages'), {
-        chatId, fromUserId: currentUserData.uid, fromUserName: currentUserData.name,
-        toUserId, text: text.trim(), createdAt: serverTimestamp()
-      });
-      const chatRef = doc(db, 'chats', chatId);
-      const chatSnap = await getDoc(chatRef);
-      if (chatSnap.exists()) {
-        await updateDoc(chatRef, { lastMessage: text.trim(), lastUpdated: serverTimestamp() });
-      }
-      return true;
-    } catch(e) { showToast('Ошибка отправки', true); return false; }
+    await addDoc(collection(db, 'messages'), {
+      chatId, fromUserId: currentUserData.uid, fromUserName: currentUserData.name,
+      toUserId, text: text.trim(), createdAt: serverTimestamp()
+    });
+    await updateDoc(doc(db, 'chats', chatId), { lastMessage: text.trim(), lastUpdated: serverTimestamp() });
+    return true;
   }
   
-  // Рендер уведомлений
-  async function renderNotifications() {
-    const contentArea = document.getElementById('contentArea');
-    contentArea.innerHTML = `
-      <div class="notifications-panel animate-fade-up">
-        <h3>🔔 Уведомления</h3>
-        <div id="notificationsList"></div>
+  // Рендер поста с лайками и комментариями
+  function renderPost(post, postId, isOwnPage = false) {
+    const isLiked = (post.likedBy || []).includes(currentUserData.uid);
+    const likesCount = post.likesCount || 0;
+    const dateStr = post.createdAt?.toDate().toLocaleString('ru-RU') || 'Только что';
+    const postHTML = `
+      <div class="post-item animate-fade-up" data-post-id="${postId}">
+        <div class="post-header">
+          <div class="post-avatar">${escapeHtml((post.authorName || 'U').charAt(0).toUpperCase())}</div>
+          <div>
+            <div class="post-author">${escapeHtml(post.authorName)}</div>
+            <div class="post-date">${dateStr}</div>
+          </div>
+        </div>
+        <div class="post-text">${escapeHtml(post.text)}</div>
+        <div class="post-actions">
+          <button class="like-btn ${isLiked ? 'liked' : ''}" data-post-id="${postId}">
+            <span class="like-icon">${isLiked ? '❤️' : '🤍'}</span>
+            <span class="likes-count">${likesCount}</span>
+          </button>
+          <button class="comment-btn" data-post-id="${postId}">
+            💬 <span class="comments-count">0</span>
+          </button>
+        </div>
+        <div class="comments-section" data-post-id="${postId}">
+          <div class="comments-list" id="comments-list-${postId}"></div>
+          <div class="comment-input-area">
+            <input type="text" class="comment-input" placeholder="Написать комментарий..." data-post-id="${postId}">
+            <button class="comment-submit" data-post-id="${postId}">→</button>
+          </div>
+        </div>
       </div>
     `;
-    
-    const q = query(collection(db, 'friendRequests'), where('toUserId', '==', currentUserData.uid), where('status', '==', 'pending'), orderBy('createdAt', 'desc'));
+    return { html: postHTML, postId: postId };
+  }
+  
+  async function loadComments(postId, containerId) {
+    const q = query(collection(db, 'comments'), where('postId', '==', postId), orderBy('createdAt', 'asc'));
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      const container = document.getElementById('notificationsList');
+      const container = document.getElementById(containerId);
       if (!container) return;
+      const comments = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      const commentCount = comments.length;
+      const commentsCountSpan = document.querySelector(`.comment-btn[data-post-id="${postId}"] .comments-count`);
+      if (commentsCountSpan) commentsCountSpan.textContent = commentCount;
       
-      const requests = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      if (requests.length === 0) {
-        container.innerHTML = '<div class="empty-notifications">✨ Нет новых уведомлений</div>';
+      if (comments.length === 0) {
+        container.innerHTML = '<div style="padding:8px; color:var(--text-light); text-align:center;">Нет комментариев</div>';
       } else {
-        container.innerHTML = requests.map(req => `
-          <div class="notification-item animate-slide-left">
-            <div class="notification-info">
-              <strong>${escapeHtml(req.fromUserName)}</strong>
-              <p>📨 Хочет добавить вас в друзья</p>
-            </div>
-            <div class="notification-actions">
-              <button class="btn-success accept-request" data-id="${req.id}" data-from-id="${req.fromUserId}" data-from-name="${escapeHtml(req.fromUserName)}">✅ Принять</button>
-              <button class="btn-warning reject-request" data-id="${req.id}">❌ Отклонить</button>
-            </div>
+        container.innerHTML = comments.map(c => `
+          <div class="comment-item">
+            <span class="comment-author">${escapeHtml(c.userName)}</span>
+            <span class="comment-text">${escapeHtml(c.text)}</span>
+            <div class="comment-time">${c.createdAt?.toDate().toLocaleTimeString('ru-RU', {hour:'2-digit', minute:'2-digit'}) || ''}</div>
           </div>
         `).join('');
+      }
+    });
+    return unsubscribe;
+  }
+  
+  async function renderFeed() {
+    const contentArea = document.getElementById('contentArea');
+    contentArea.innerHTML = '<div class="post-feed" id="feedPosts"></div>';
+    
+    const q = query(collection(db, 'posts'), orderBy('createdAt', 'desc'));
+    const unsubscribe = onSnapshot(q, async (snapshot) => {
+      const container = document.getElementById('feedPosts');
+      if (!container) return;
+      const posts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      if (posts.length === 0) {
+        container.innerHTML = '<p style="color:var(--text-secondary); text-align:center; padding:40px;">Новостей пока нет</p>';
+        return;
+      }
+      
+      container.innerHTML = '';
+      for (const post of posts) {
+        const { html, postId } = renderPost(post, post.id);
+        container.insertAdjacentHTML('beforeend', html);
         
-        document.querySelectorAll('.accept-request').forEach(btn => {
-          btn.addEventListener('click', async () => {
-            await acceptFriendRequest(btn.getAttribute('data-id'), btn.getAttribute('data-from-id'), btn.getAttribute('data-from-name'));
-            renderNotifications();
-            updateNotificationBadge();
-          });
+        // Добавляем комментарии
+        const commentsSection = container.querySelector(`.comments-section[data-post-id="${postId}"]`);
+        const likeBtn = container.querySelector(`.like-btn[data-post-id="${postId}"]`);
+        const commentBtn = container.querySelector(`.comment-btn[data-post-id="${postId}"]`);
+        const commentSubmit = container.querySelector(`.comment-submit[data-post-id="${postId}"]`);
+        const commentInput = container.querySelector(`.comment-input[data-post-id="${postId}"]`);
+        
+        // Загружаем комментарии
+        await loadComments(postId, `comments-list-${postId}`);
+        
+        // Лайк
+        likeBtn?.addEventListener('click', async (e) => {
+          e.stopPropagation();
+          await toggleLike(postId, post.userId);
         });
         
-        document.querySelectorAll('.reject-request').forEach(btn => {
-          btn.addEventListener('click', async () => {
-            await rejectFriendRequest(btn.getAttribute('data-id'));
-            renderNotifications();
-            updateNotificationBadge();
-          });
+        // Показать/скрыть комментарии
+        commentBtn?.addEventListener('click', () => {
+          commentsSection?.classList.toggle('open');
+        });
+        
+        // Отправить комментарий
+        commentSubmit?.addEventListener('click', async () => {
+          const text = commentInput?.value;
+          if (text.trim()) {
+            await addComment(postId, text);
+            commentInput.value = '';
+          }
+        });
+        
+        commentInput?.addEventListener('keypress', async (e) => {
+          if (e.key === 'Enter') {
+            const text = commentInput.value;
+            if (text.trim()) {
+              await addComment(postId, text);
+              commentInput.value = '';
+            }
+          }
         });
       }
     });
     
-    if (notificationsUnsubscribe) notificationsUnsubscribe();
-    window.notificationsUnsubscribe = unsubscribe;
+    if (postsUnsubscribe) postsUnsubscribe();
+    window.postsUnsubscribe = unsubscribe;
   }
   
   async function renderProfile() {
@@ -749,12 +894,13 @@
           </div>
         </div>
       </div>
-      <div class="post-creator animate-fade-up" style="animation-delay: 0.05s;">
+      <div class="post-creator animate-fade-up">
         <textarea id="newPostText" placeholder="Что нового?"></textarea>
         <button class="btn btn-primary" id="publishPostBtn">Опубликовать</button>
       </div>
       <div class="post-feed" id="profilePosts"></div>
     `;
+    
     document.getElementById('publishPostBtn').addEventListener('click', async () => {
       const text = document.getElementById('newPostText').value;
       if (await createPost(text)) {
@@ -762,47 +908,57 @@
         showToast('Пост опубликован!');
       }
     });
+    
     const q = query(collection(db, 'posts'), where('userId', '==', currentUserData.uid), orderBy('createdAt', 'desc'));
-    const unsubscribe = onSnapshot(q, (snapshot) => {
+    const unsubscribe = onSnapshot(q, async (snapshot) => {
       const container = document.getElementById('profilePosts');
       if (!container) return;
       const posts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      if (posts.length === 0) container.innerHTML = '<p style="color:var(--text-secondary); text-align:center; padding:40px;">Нет постов</p>';
-      else container.innerHTML = posts.map((post, idx) => `
-        <div class="post-item animate-fade-up" style="animation-delay: ${idx * 0.03}s;">
-          <div class="post-author">
-            <div class="post-author-avatar">${escapeHtml((post.authorName || 'U').charAt(0).toUpperCase())}</div>
-            <div><div class="post-author-name">${escapeHtml(post.authorName)}</div>
-            <div class="post-date">${post.createdAt?.toDate().toLocaleString('ru-RU') || 'Только что'}</div></div>
-          </div>
-          <div class="post-text">${escapeHtml(post.text)}</div>
-        </div>
-      `).join('');
+      if (posts.length === 0) {
+        container.innerHTML = '<p style="color:var(--text-secondary); text-align:center; padding:40px;">У вас пока нет постов</p>';
+        return;
+      }
+      
+      container.innerHTML = '';
+      for (const post of posts) {
+        const { html, postId } = renderPost(post, post.id, true);
+        container.insertAdjacentHTML('beforeend', html);
+        
+        const commentsSection = container.querySelector(`.comments-section[data-post-id="${postId}"]`);
+        const likeBtn = container.querySelector(`.like-btn[data-post-id="${postId}"]`);
+        const commentBtn = container.querySelector(`.comment-btn[data-post-id="${postId}"]`);
+        const commentSubmit = container.querySelector(`.comment-submit[data-post-id="${postId}"]`);
+        const commentInput = container.querySelector(`.comment-input[data-post-id="${postId}"]`);
+        
+        await loadComments(postId, `comments-list-${postId}`);
+        
+        likeBtn?.addEventListener('click', async (e) => {
+          e.stopPropagation();
+          await toggleLike(postId, post.userId);
+        });
+        
+        commentBtn?.addEventListener('click', () => commentsSection?.classList.toggle('open'));
+        
+        commentSubmit?.addEventListener('click', async () => {
+          const text = commentInput?.value;
+          if (text.trim()) {
+            await addComment(postId, text);
+            commentInput.value = '';
+          }
+        });
+        
+        commentInput?.addEventListener('keypress', async (e) => {
+          if (e.key === 'Enter') {
+            const text = commentInput.value;
+            if (text.trim()) {
+              await addComment(postId, text);
+              commentInput.value = '';
+            }
+          }
+        });
+      }
     });
-    if (postsUnsubscribe) postsUnsubscribe();
-    window.postsUnsubscribe = unsubscribe;
-  }
-  
-  async function renderFeed() {
-    const contentArea = document.getElementById('contentArea');
-    contentArea.innerHTML = '<div class="post-feed" id="feedPosts"></div>';
-    const q = query(collection(db, 'posts'), orderBy('createdAt', 'desc'));
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const container = document.getElementById('feedPosts');
-      if (!container) return;
-      const posts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      if (posts.length === 0) container.innerHTML = '<p style="color:var(--text-secondary); text-align:center; padding:40px;">Новостей нет</p>';
-      else container.innerHTML = posts.map((post, idx) => `
-        <div class="post-item animate-fade-up" style="animation-delay: ${idx * 0.02}s;">
-          <div class="post-author">
-            <div class="post-author-avatar">${escapeHtml((post.authorName || 'U').charAt(0).toUpperCase())}</div>
-            <div><div class="post-author-name">${escapeHtml(post.authorName)}</div>
-            <div class="post-date">${post.createdAt?.toDate().toLocaleString('ru-RU') || 'Только что'}</div></div>
-          </div>
-          <div class="post-text">${escapeHtml(post.text)}</div>
-        </div>
-      `).join('');
-    });
+    
     if (postsUnsubscribe) postsUnsubscribe();
     window.postsUnsubscribe = unsubscribe;
   }
@@ -818,25 +974,24 @@
         <div id="searchResults"></div>
       </div>
     `;
-    const friendsListDiv = document.getElementById('friendsList');
+    
     if (currentUserData.friends.length === 0) {
-      friendsListDiv.innerHTML = '<p style="color:var(--text-secondary);">У вас пока нет друзей</p>';
+      document.getElementById('friendsList').innerHTML = '<p style="color:var(--text-secondary);">У вас пока нет друзей</p>';
     } else {
-      const friendsPromises = currentUserData.friends.map(async (friendId) => {
+      const friendsList = [];
+      for (const friendId of currentUserData.friends) {
         const friendSnap = await getDoc(doc(db, 'users', friendId));
-        return friendSnap.exists() ? { id: friendId, ...friendSnap.data() } : null;
-      });
-      const friends = (await Promise.all(friendsPromises)).filter(f => f);
-      friendsListDiv.innerHTML = friends.map((friend, idx) => `
-        <div class="friend-item animate-slide-left" style="animation-delay: ${idx * 0.05}s;">
-          <div><strong>${escapeHtml(friend.name)}</strong><br><small>${escapeHtml(friend.email)}</small></div>
-          <button class="btn btn-danger remove-friend" data-id="${friend.id}">Удалить</button>
-        </div>
+        if (friendSnap.exists()) friendsList.push({ id: friendId, ...friendSnap.data() });
+      }
+      document.getElementById('friendsList').innerHTML = friendsList.map(f => `
+        <div class="friend-item"><div><strong>${escapeHtml(f.name)}</strong><br><small>${escapeHtml(f.email)}</small></div>
+        <button class="btn btn-danger remove-friend" data-id="${f.id}">Удалить</button></div>
       `).join('');
       document.querySelectorAll('.remove-friend').forEach(btn => {
-        btn.addEventListener('click', async () => { await removeFriend(btn.getAttribute('data-id')); renderFriends(); updateNotificationBadge(); });
+        btn.addEventListener('click', async () => { await removeFriend(btn.dataset.id); renderFriends(); });
       });
     }
+    
     const searchInput = document.getElementById('searchUserInput');
     searchInput.addEventListener('input', async () => {
       const query_text = searchInput.value.trim().toLowerCase();
@@ -852,98 +1007,122 @@
       const resultsDiv = document.getElementById('searchResults');
       if (users.length === 0) resultsDiv.innerHTML = '<p style="color:var(--text-secondary);">Не найдены</p>';
       else resultsDiv.innerHTML = users.map(user => `
-        <div class="user-search-result">
-          <div><strong>${escapeHtml(user.name)}</strong><br><small>${escapeHtml(user.email)}</small></div>
-          ${currentUserData.friends.includes(user.uid) ? '<button class="btn btn-danger" disabled>✓ В друзьях</button>' :
-            `<button class="btn btn-primary send-request-btn" data-id="${user.uid}" data-name="${escapeHtml(user.name)}">➕ Добавить в друзья</button>`}
-        </div>
+        <div class="user-search-result"><div><strong>${escapeHtml(user.name)}</strong><br><small>${escapeHtml(user.email)}</small></div>
+        ${currentUserData.friends.includes(user.uid) ? '<button class="btn btn-danger" disabled>✓ В друзьях</button>' :
+          `<button class="btn btn-primary send-request" data-id="${user.uid}" data-name="${escapeHtml(user.name)}">➕ Добавить</button>`}</div>
       `).join('');
-      document.querySelectorAll('.send-request-btn').forEach(btn => {
-        btn.addEventListener('click', async () => {
-          await sendFriendRequest(btn.getAttribute('data-id'), btn.getAttribute('data-name'));
-          updateNotificationBadge();
-        });
+      document.querySelectorAll('.send-request').forEach(btn => {
+        btn.addEventListener('click', () => sendFriendRequest(btn.dataset.id, btn.dataset.name));
       });
     });
+  }
+  
+  async function renderNotifications() {
+    const contentArea = document.getElementById('contentArea');
+    contentArea.innerHTML = `<div class="notifications-panel animate-fade-up"><h3>🔔 Уведомления</h3><div id="notificationsList"></div></div>`;
+    
+    const q = query(collection(db, 'friendRequests'), where('toUserId', '==', currentUserData.uid), where('status', '==', 'pending'), orderBy('createdAt', 'desc'));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const container = document.getElementById('notificationsList');
+      if (!container) return;
+      const requests = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      if (requests.length === 0) {
+        container.innerHTML = '<div class="empty-notifications">✨ Нет новых уведомлений</div>';
+      } else {
+        container.innerHTML = requests.map(req => `
+          <div class="notification-item animate-slide-left">
+            <div class="notification-info"><strong>${escapeHtml(req.fromUserName)}</strong><p>📨 Хочет добавить вас в друзья</p></div>
+            <div class="notification-actions">
+              <button class="btn-success accept" data-id="${req.id}" data-from-id="${req.fromUserId}" data-from-name="${escapeHtml(req.fromUserName)}">✅ Принять</button>
+              <button class="btn-warning reject" data-id="${req.id}">❌ Отклонить</button>
+            </div>
+          </div>
+        `).join('');
+        document.querySelectorAll('.accept').forEach(btn => {
+          btn.addEventListener('click', () => acceptFriendRequest(btn.dataset.id, btn.dataset.fromId, btn.dataset.fromName));
+        });
+        document.querySelectorAll('.reject').forEach(btn => {
+          btn.addEventListener('click', () => rejectFriendRequest(btn.dataset.id));
+        });
+      }
+    });
+    if (window.notifUnsub) window.notifUnsub();
+    window.notifUnsub = unsubscribe;
   }
   
   async function loadChatList(filter = '') {
     if (!currentUserData.uid) return;
-    const chatsRef = collection(db, 'chats');
-    const q = query(chatsRef, where('participants', 'array-contains', currentUserData.uid));
+    const q = query(collection(db, 'chats'), where('participants', 'array-contains', currentUserData.uid));
     const unsubscribe = onSnapshot(q, async (snapshot) => {
       const container = document.getElementById('chatContactsList');
       if (!container) return;
-      let chats = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      const processedChats = [];
-      for (const chat of chats) {
-        const otherUserId = chat.participants.find(id => id !== currentUserData.uid);
-        if (otherUserId && await isFriend(otherUserId)) {
-          const otherUserSnap = await getDoc(doc(db, 'users', otherUserId));
-          const otherName = otherUserSnap.exists() ? otherUserSnap.data().name : 'Пользователь';
-          if (otherName.toLowerCase().includes(filter.toLowerCase())) {
-            processedChats.push({ ...chat, otherName, otherUserId });
+      const processed = [];
+      for (const docSnap of snapshot.docs) {
+        const chat = docSnap.data();
+        const otherId = chat.participants.find(id => id !== currentUserData.uid);
+        if (otherId && currentUserData.friends.includes(otherId)) {
+          const userSnap = await getDoc(doc(db, 'users', otherId));
+          const name = userSnap.exists() ? userSnap.data().name : 'Пользователь';
+          if (name.toLowerCase().includes(filter.toLowerCase())) {
+            processed.push({ id: docSnap.id, ...chat, otherName: name, otherId });
           }
         }
       }
-      if (processedChats.length === 0) {
+      if (processed.length === 0) {
         container.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text-light);">Нет чатов</div>';
         return;
       }
-      container.innerHTML = processedChats.map((chat, idx) => `
-        <div class="chat-contact ${chat.id === currentChatId ? 'active' : ''}" data-chat-id="${chat.id}" data-chat-name="${escapeHtml(chat.otherName)}" data-chat-userid="${chat.otherUserId}">
+      container.innerHTML = processed.map(chat => `
+        <div class="chat-contact" data-chat-id="${chat.id}" data-chat-name="${escapeHtml(chat.otherName)}" data-chat-userid="${chat.otherId}">
           <div class="chat-contact-avatar">${escapeHtml(chat.otherName.charAt(0).toUpperCase())}</div>
-          <div style="flex:1;"><div style="font-weight:600;">${escapeHtml(chat.otherName)}</div>
+          <div><div style="font-weight:600;">${escapeHtml(chat.otherName)}</div>
           <div style="font-size:11px;color:var(--text-light);">${escapeHtml((chat.lastMessage || '').substring(0, 30))}</div></div>
         </div>
       `).join('');
       document.querySelectorAll('.chat-contact').forEach(el => {
-        el.addEventListener('click', () => {
-          openChat(el.getAttribute('data-chat-id'), el.getAttribute('data-chat-name'), el.getAttribute('data-chat-userid'));
-        });
+        el.addEventListener('click', () => openChat(el.dataset.chatId, el.dataset.chatName, el.dataset.chatUserid));
       });
     });
-    if (window.chatsUnsubscribe) window.chatsUnsubscribe();
-    window.chatsUnsubscribe = unsubscribe;
+    if (window.chatsUnsub) window.chatsUnsub();
+    window.chatsUnsub = unsubscribe;
   }
   
-  async function openChat(chatId, otherUserName, otherUserId) {
+  async function openChat(chatId, otherName, otherId) {
     currentChatId = chatId;
-    currentChatUserId = otherUserId;
+    currentChatUserId = otherId;
     const chatWindow = document.getElementById('chatWindow');
     if (!chatWindow) return;
     chatWindow.innerHTML = `
-      <div style="padding:12px; border-bottom:1px solid var(--border);"><strong>${escapeHtml(otherUserName)}</strong></div>
+      <div style="padding:12px; border-bottom:1px solid var(--border);"><strong>${escapeHtml(otherName)}</strong></div>
       <div class="messages-container" id="chatMessages"></div>
-      <div class="chat-input-area"><input type="text" id="chatMessageInput" placeholder="Сообщение..."><button class="send-btn" id="sendChatMsgBtn">→</button></div>
+      <div class="chat-input-area"><input type="text" id="msgInput" placeholder="Сообщение..."><button class="send-btn" id="sendBtn">→</button></div>
     `;
     const q = query(collection(db, 'messages'), where('chatId', '==', chatId), orderBy('createdAt', 'asc'));
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const container = document.getElementById('chatMessages');
       if (!container) return;
-      const messages = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      container.innerHTML = messages.map(msg => {
-        const isOwn = msg.fromUserId === currentUserData.uid;
-        const time = msg.createdAt?.toDate().toLocaleTimeString('ru-RU', { hour:'2-digit', minute:'2-digit' }) || '';
-        return `<div class="message-bubble ${isOwn ? 'own animate-slide-right' : 'animate-slide-left'} animate-message">
-          <div class="message-sender">${isOwn ? 'Вы' : escapeHtml(msg.fromUserName)}</div>
-          <div>${escapeHtml(msg.text)}</div>
+      const msgs = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+      container.innerHTML = msgs.map(m => {
+        const isOwn = m.fromUserId === currentUserData.uid;
+        const time = m.createdAt?.toDate().toLocaleTimeString('ru-RU', {hour:'2-digit', minute:'2-digit'}) || '';
+        return `<div class="message-bubble ${isOwn ? 'own' : ''} animate-message">
+          <div class="message-sender">${isOwn ? 'Вы' : escapeHtml(m.fromUserName)}</div>
+          <div>${escapeHtml(m.text)}</div>
           <div class="message-time">${time}</div>
         </div>`;
       }).join('');
       container.scrollTop = container.scrollHeight;
     });
-    if (messagesUnsubscribe) messagesUnsubscribe();
-    window.messagesUnsubscribe = unsubscribe;
-    const sendBtn = document.getElementById('sendChatMsgBtn');
-    const msgInput = document.getElementById('chatMessageInput');
-    const handleSend = async () => {
-      if (msgInput.value.trim()) {
-        if (await sendMessage(chatId, msgInput.value, otherUserId)) msgInput.value = '';
+    if (window.msgsUnsub) window.msgsUnsub();
+    window.msgsUnsub = unsubscribe;
+    const send = async () => {
+      const input = document.getElementById('msgInput');
+      if (input.value.trim()) {
+        if (await sendMessage(chatId, input.value, otherId)) input.value = '';
       }
     };
-    sendBtn?.addEventListener('click', handleSend);
-    msgInput?.addEventListener('keypress', (e) => { if (e.key === 'Enter') handleSend(); });
+    document.getElementById('sendBtn')?.addEventListener('click', send);
+    document.getElementById('msgInput')?.addEventListener('keypress', (e) => { if (e.key === 'Enter') send(); });
   }
   
   async function renderMessages() {
@@ -951,22 +1130,21 @@
     contentArea.innerHTML = `
       <div class="chat-layout">
         <div class="chat-list-panel">
-          <div class="chat-search"><input type="text" placeholder="Поиск" id="chatSearchInput"></div>
+          <div class="chat-search"><input type="text" placeholder="Поиск" id="chatSearch"></div>
           <div class="chat-contacts" id="chatContactsList"></div>
           <div style="padding:12px;text-align:center;color:var(--text-light);font-size:11px;">💡 Только друзья</div>
         </div>
-        <div class="chat-window" id="chatWindow"><div style="flex:1;display:flex;align-items:center;justify-content:center;color:var(--text-light);">Выберите чат</div></div>
+        <div class="chat-window" id="chatWindow"><div style="flex:1;display:flex;align-items:center;justify-content:center;">Выберите чат</div></div>
       </div>
     `;
     await loadChatList();
-    const searchInput = document.getElementById('chatSearchInput');
-    if (searchInput) searchInput.addEventListener('input', () => loadChatList(searchInput.value));
+    document.getElementById('chatSearch')?.addEventListener('input', (e) => loadChatList(e.target.value));
   }
   
   async function renderSettings() {
     const contentArea = document.getElementById('contentArea');
     const currentTheme = localStorage.getItem('theme') || 'light';
-    const animationsEnabled = localStorage.getItem('animations') !== 'off';
+    const animOn = localStorage.getItem('animations') !== 'off';
     contentArea.innerHTML = `
       <div class="settings-panel animate-fade-up">
         <h3 style="margin-bottom:20px;">⚙️ Настройки</h3>
@@ -974,34 +1152,22 @@
         <div><button class="theme-btn ${currentTheme === 'light' ? 'active' : ''}" data-theme="light">Светлая</button>
         <button class="theme-btn ${currentTheme === 'dark' ? 'active' : ''}" data-theme="dark">Тёмная</button></div></div>
         <div class="setting-item"><div><strong>✨ Анимации</strong><br><small>Вкл/Выкл</small></div>
-        <div><button class="animation-toggle ${animationsEnabled ? 'active' : ''}" data-animations="on">Вкл</button>
-        <button class="animation-toggle ${!animationsEnabled ? 'active' : ''}" data-animations="off">Выкл</button></div></div>
+        <div><button class="animation-toggle ${animOn ? 'active' : ''}" data-anim="on">Вкл</button>
+        <button class="animation-toggle ${!animOn ? 'active' : ''}" data-anim="off">Выкл</button></div></div>
         <div class="setting-item"><div><strong>👤 Аккаунт</strong><br><small>ID: ${currentUserData.uid.substring(0, 12)}...</small></div></div>
       </div>
     `;
     document.querySelectorAll('.theme-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const theme = btn.getAttribute('data-theme');
-        saveTheme(theme);
-        document.querySelectorAll('.theme-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        showToast(`Тема: ${theme === 'light' ? 'светлая' : 'тёмная'}`);
-      });
+      btn.addEventListener('click', () => { saveTheme(btn.dataset.theme); renderSettings(); showToast(`Тема: ${btn.dataset.theme === 'light' ? 'светлая' : 'тёмная'}`); });
     });
     document.querySelectorAll('.animation-toggle').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const enabled = btn.getAttribute('data-animations') === 'on';
-        saveAnimations(enabled);
-        document.querySelectorAll('.animation-toggle').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        showToast(enabled ? 'Анимации включены' : 'Анимации выключены');
-      });
+      btn.addEventListener('click', () => { saveAnimations(btn.dataset.anim === 'on'); renderSettings(); showToast(btn.dataset.anim === 'on' ? 'Анимации включены' : 'Анимации выключены'); });
     });
   }
   
   async function renderPage(page) {
     currentPage = page;
-    toggleMobileMenu(false);
+    if (window.notifUnsub && page !== 'notifications') {}
     switch(page) {
       case 'profile': await renderProfile(); break;
       case 'feed': await renderFeed(); break;
@@ -1024,48 +1190,35 @@
     renderPage(page);
   }
   
-  // Мобильное меню
   function toggleMobileMenu(show) {
     const menu = document.getElementById('mobileMenu');
     const overlay = document.getElementById('mobileMenuOverlay');
-    if (show) {
-      menu?.classList.add('active');
-      overlay?.classList.add('active');
-    } else {
-      menu?.classList.remove('active');
-      overlay?.classList.remove('active');
-    }
+    if (show) { menu?.classList.add('active'); overlay?.classList.add('active'); }
+    else { menu?.classList.remove('active'); overlay?.classList.remove('active'); }
   }
   
   document.getElementById('mobileMenuBtn')?.addEventListener('click', () => toggleMobileMenu(true));
   document.getElementById('mobileMenuClose')?.addEventListener('click', () => toggleMobileMenu(false));
   document.getElementById('mobileMenuOverlay')?.addEventListener('click', () => toggleMobileMenu(false));
   
-  // Event Listeners
   document.getElementById('registerEmailBtn')?.addEventListener('click', async () => {
     const email = document.getElementById('registerEmail').value;
     const password = document.getElementById('registerPassword').value;
-    if (password.length < 6) { showToast('Пароль минимум 6 символов', true); return; }
-    try {
-      const userCred = await createUserWithEmailAndPassword(auth, email, password);
-      await createUserProfile(userCred.user);
-    } catch(e) { showToast(e.message, true); }
+    if (password.length < 6) return showToast('Пароль минимум 6 символов', true);
+    try { await createUserProfile((await createUserWithEmailAndPassword(auth, email, password)).user); }
+    catch(e) { showToast(e.message, true); }
   });
   
   document.getElementById('loginEmailBtn')?.addEventListener('click', async () => {
     const email = document.getElementById('registerEmail').value;
     const password = document.getElementById('registerPassword').value;
-    try {
-      const userCred = await signInWithEmailAndPassword(auth, email, password);
-      await createUserProfile(userCred.user);
-    } catch(e) { showToast(e.message, true); }
+    try { await createUserProfile((await signInWithEmailAndPassword(auth, email, password)).user); }
+    catch(e) { showToast(e.message, true); }
   });
   
   document.getElementById('googleLoginBtn')?.addEventListener('click', async () => {
-    try {
-      const result = await signInWithPopup(auth, googleProvider);
-      await createUserProfile(result.user);
-    } catch(e) { showToast(e.message, true); }
+    try { await createUserProfile((await signInWithPopup(auth, googleProvider)).user); }
+    catch(e) { showToast(e.message, true); }
   });
   
   document.getElementById('logoutBtn')?.addEventListener('click', async () => {
@@ -1096,19 +1249,16 @@
   document.querySelectorAll('.header-nav span, .left-menu-item[data-page]').forEach(el => {
     el.addEventListener('click', () => navigateTo(el.getAttribute('data-page')));
   });
-  
   document.querySelectorAll('.mobile-menu-item[data-page]').forEach(el => {
     el.addEventListener('click', () => navigateTo(el.getAttribute('data-page')));
   });
-  
   document.getElementById('logoBtn')?.addEventListener('click', () => navigateTo('profile'));
   document.getElementById('settingsMenuBtn')?.addEventListener('click', () => navigateTo('settings'));
   document.getElementById('settingsMenuBtnMobile')?.addEventListener('click', () => navigateTo('settings'));
   
   onAuthStateChanged(auth, async (user) => {
     if (user) {
-      const userRef = doc(db, 'users', user.uid);
-      const userSnap = await getDoc(userRef);
+      const userSnap = await getDoc(doc(db, 'users', user.uid));
       if (userSnap.exists()) {
         currentUserData = { uid: user.uid, name: userSnap.data().name, email: userSnap.data().email, friends: userSnap.data().friends || [] };
       } else { await createUserProfile(user); }
