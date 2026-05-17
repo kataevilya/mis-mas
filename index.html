@@ -1,11 +1,797 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>MiS-MaS</title>
+  
+  <!-- Firebase SDK -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-analytics.js";
+    import { getAuth, signInWithPopup, GoogleAuthProvider, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+    import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, doc, setDoc, getDoc, updateDoc, arrayUnion, arrayRemove, where, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    
+    const firebaseConfig = {
+      apiKey: "AIzaSyBxWhSwY0CnzNJDpDv3t93r-ES87VNpHNA",
+      authDomain: "mios-d93a0.firebaseapp.com",
+      projectId: "mios-d93a0",
+      storageBucket: "mios-d93a0.firebasestorage.app",
+      messagingSenderId: "243827096220",
+      appId: "1:243827096220:web:852a55c81570c831134b59",
+      measurementId: "G-CCEP9R9LPD"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const analytics = getAnalytics(app);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+    const googleProvider = new GoogleAuthProvider();
+
+    window.firebaseApp = { app, auth, db, googleProvider, signInWithPopup, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, collection, addDoc, query, orderBy, onSnapshot, doc, setDoc, getDoc, updateDoc, arrayUnion, arrayRemove, where, getDocs };
+  </script>
+  
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #edeef0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      color: #2a2a2a;
+      -webkit-tap-highlight-color: transparent;
+      font-size: 13px;
+      line-height: 1.4;
+    }
+    .app { max-width: 1000px; margin: 0 auto; width: 100%; flex: 1; display: flex; flex-direction: column; }
+
+    .register-screen {
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      background: linear-gradient(135deg, #4a6d8c 0%, #2c4c6e 100%);
+      display: flex; align-items: center; justify-content: center; z-index: 2000;
+    }
+    .register-card {
+      background: #ffffff; border-radius: 16px; padding: 40px 32px;
+      max-width: 420px; width: 90%; box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    }
+    .register-logo { font-size: 36px; font-weight: 700; color: #4a6d8c; margin-bottom: 8px; text-align: center; }
+    .register-subtitle { font-size: 14px; color: #656565; margin-bottom: 28px; text-align: center; }
+    .register-input-wrapper { margin-bottom: 16px; }
+    .register-input-wrapper label { display: block; font-size: 13px; color: #656565; margin-bottom: 6px; font-weight: 500; }
+    .register-input {
+      width: 100%; padding: 12px 14px; border: 2px solid #e0e4e8; border-radius: 10px;
+      font-size: 15px; outline: none; background: #fff; transition: border-color 0.2s;
+    }
+    .register-input:focus { border-color: #4a6d8c; }
+    .google-btn {
+      background: #fff; border: 2px solid #e0e4e8; border-radius: 10px; padding: 12px;
+      width: 100%; color: #2c3e50; font-size: 14px; font-weight: 600; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 12px;
+      transition: background 0.2s;
+    }
+    .google-btn:hover { background: #f8f9fa; border-color: #4a6d8c; }
+    .register-btn {
+      background: #4a6d8c; border: none; border-radius: 10px; padding: 12px;
+      width: 100%; color: white; font-size: 14px; font-weight: 600; cursor: pointer;
+      transition: background 0.2s;
+    }
+    .register-btn:hover { background: #3a5a78; }
+    .login-btn {
+      background: transparent; border: 2px solid #4a6d8c; border-radius: 10px; padding: 12px;
+      width: 100%; color: #4a6d8c; font-size: 14px; font-weight: 600; cursor: pointer;
+      margin-top: 12px;
+    }
+    .divider {
+      display: flex; align-items: center; text-align: center; color: #888; font-size: 12px; margin: 20px 0;
+    }
+    .divider::before, .divider::after {
+      content: ''; flex: 1; border-bottom: 1px solid #e7e8ec;
+    }
+    .divider span { padding: 0 10px; }
+
+    .license-screen, .reject-screen {
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 2000;
+    }
+    .license-card, .reject-card {
+      background: white; border-radius: 16px; padding: 28px;
+      max-width: 500px; width: 90%;
+    }
+    .license-text-container {
+      background: #fafbfc; border: 1px solid #e7e8ec; border-radius: 8px;
+      padding: 16px; margin-bottom: 20px; max-height: 350px; overflow-y: auto; font-size: 13px; line-height: 1.5;
+    }
+    .license-accept-btn {
+      background: #4a6d8c; border: none; border-radius: 10px; padding: 12px;
+      width: 100%; color: white; font-weight: 600; cursor: pointer; margin-bottom: 8px;
+    }
+    .license-reject-btn {
+      background: #d9534f; border: none; border-radius: 10px; padding: 12px;
+      width: 100%; color: white; font-weight: 600; cursor: pointer;
+    }
+    .hidden { display: none !important; }
+
+    .page-header {
+      background: #4a6d8c; padding: 12px 20px; display: flex;
+      align-items: center; justify-content: space-between; color: white; position: sticky; top: 0; z-index: 20;
+    }
+    .header-logo { font-size: 22px; font-weight: 700; cursor: pointer; }
+    .header-nav { display: flex; gap: 20px; font-size: 14px; }
+    .header-nav span { cursor: pointer; opacity: 0.8; padding: 6px 0; }
+    .header-nav span.active { opacity: 1; font-weight: 600; border-bottom: 2px solid white; }
+    .logout-btn { background: rgba(255,255,255,0.2); border: none; padding: 6px 14px; border-radius: 20px; color: white; cursor: pointer; font-size: 13px; }
+    .logout-btn:hover { background: rgba(255,255,255,0.3); }
+
+    .main-layout { display: flex; flex: 1; background: #edeef0; }
+    .left-menu {
+      width: 220px; background: #ffffff; padding: 16px 0;
+      border-right: 1px solid #e7e8ec;
+    }
+    .left-menu-item { padding: 10px 24px; cursor: pointer; color: #4a6d8c; font-weight: 500; border-left: 3px solid transparent; }
+    .left-menu-item:hover { background: #e9edf1; }
+    .left-menu-item.active { background: #e9edf1; border-left-color: #4a6d8c; }
+    .content-area { flex: 1; padding: 20px; overflow-y: auto; max-height: calc(100vh - 60px); }
+
+    .profile-header {
+      background: white; border-radius: 12px; padding: 24px;
+      margin-bottom: 20px; border: 1px solid #e7e8ec;
+    }
+    .profile-info { display: flex; gap: 24px; align-items: center; flex-wrap: wrap; }
+    .profile-avatar {
+      width: 80px; height: 80px; border-radius: 50%; background: linear-gradient(135deg, #4a6d8c, #2c4c6e);
+      display: flex; align-items: center; justify-content: center; font-size: 32px; color: white; flex-shrink: 0;
+    }
+    .profile-details h2 { font-size: 22px; margin-bottom: 6px; }
+    .profile-details .email { color: #656565; font-size: 13px; }
+    .post-creator {
+      background: white; border-radius: 12px; padding: 20px;
+      margin-bottom: 20px; border: 1px solid #e7e8ec;
+    }
+    .post-creator textarea {
+      width: 100%; border: 1px solid #d3d9de; border-radius: 10px; padding: 12px;
+      resize: vertical; min-height: 70px; font-family: inherit; font-size: 14px;
+      margin-bottom: 12px;
+    }
+    .post-feed { display: flex; flex-direction: column; gap: 16px; }
+    .post-item {
+      background: white; border-radius: 12px; padding: 18px; border: 1px solid #e7e8ec;
+    }
+    .post-author { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+    .post-author-avatar {
+      width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, #4a6d8c, #2c4c6e);
+      display: flex; align-items: center; justify-content: center; color: white; font-weight: bold;
+    }
+    .post-author-name { font-weight: 600; color: #4a6d8c; }
+    .post-date { color: #888; font-size: 11px; margin-top: 2px; }
+    .post-text { font-size: 14px; line-height: 1.5; }
+
+    .chat-layout {
+      display: flex; flex: 1; background: white; border-radius: 12px;
+      border: 1px solid #e7e8ec; min-height: 550px;
+    }
+    .chat-list-panel { width: 300px; border-right: 1px solid #e7e8ec; display: flex; flex-direction: column; }
+    .chat-search { padding: 14px; border-bottom: 1px solid #e7e8ec; }
+    .chat-search input {
+      width: 100%; padding: 10px; border: 1px solid #d3d9de;
+      border-radius: 10px; font-size: 13px;
+    }
+    .chat-contacts { flex: 1; overflow-y: auto; }
+    .chat-contact {
+      padding: 14px 16px; display: flex; align-items: center; gap: 12px;
+      cursor: pointer; border-bottom: 1px solid #f0f2f5;
+    }
+    .chat-contact:hover { background: #f0f2f5; }
+    .chat-contact.active { background: #e9edf1; }
+    .chat-contact-avatar {
+      width: 46px; height: 46px; border-radius: 50%; background: linear-gradient(135deg, #4a6d8c, #2c4c6e);
+      display: flex; align-items: center; justify-content: center; color: white; font-weight: bold;
+    }
+    .chat-window { flex: 1; display: flex; flex-direction: column; }
+    .messages-container { flex: 1; padding: 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+    .message-bubble { max-width: 70%; padding: 10px 14px; border-radius: 14px; background: #e9edf1; align-self: flex-start; }
+    .message-bubble.own { background: #cce4ff; align-self: flex-end; }
+    .message-sender { font-weight: 600; color: #4a6d8c; font-size: 12px; margin-bottom: 4px; }
+    .message-time { font-size: 10px; color: #888; margin-top: 6px; }
+    .chat-input-area { border-top: 1px solid #e7e8ec; padding: 14px; display: flex; gap: 10px; }
+    .chat-input-area input { flex: 1; padding: 12px; border: 1px solid #d3d9de; border-radius: 10px; font-size: 14px; }
+    .btn { padding: 10px 20px; border-radius: 10px; border: none; cursor: pointer; font-weight: 500; }
+    .btn-primary { background: #4a6d8c; color: white; }
+    .btn-primary:hover { background: #3a5a78; }
+    .send-btn { background: #4a6d8c; color: white; padding: 12px 24px; border-radius: 10px; border: none; cursor: pointer; font-weight: 600; }
+    .send-btn:hover { background: #3a5a78; }
+
+    .toast {
+      position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
+      background: #333; color: white; padding: 12px 24px;
+      border-radius: 30px; font-size: 14px; z-index: 3000; opacity: 0; transition: opacity 0.3s;
+      pointer-events: none;
+    }
+    .toast.show { opacity: 1; }
+    .toast.error { background: #d9534f; }
+
+    @media (max-width: 700px) {
+      .left-menu { display: none; }
+      .chat-list-panel { width: 100%; }
+      .chat-layout { flex-direction: column; }
+      .profile-info { flex-direction: column; text-align: center; }
+    }
+  </style>
 </head>
 <body>
+<div id="appRoot" class="app">
+  <div id="registerScreen" class="register-screen">
+    <div class="register-card">
+      <div class="register-logo">MiS-MaS</div>
+      <div class="register-subtitle">Войдите в свой аккаунт</div>
+      
+      <div class="register-input-wrapper">
+        <label>Email</label>
+        <input type="email" id="registerEmail" class="register-input" placeholder="example@mail.com">
+      </div>
+      <div class="register-input-wrapper">
+        <label>Пароль</label>
+        <input type="password" id="registerPassword" class="register-input" placeholder="Минимум 6 символов">
+      </div>
+      
+      <button class="register-btn" id="registerEmailBtn">Зарегистрироваться</button>
+      <button class="login-btn" id="loginEmailBtn">Войти по email</button>
+      
+      <div class="divider"><span>или</span></div>
+      
+      <button class="google-btn" id="googleLoginBtn">
+        <svg width="20" height="20" viewBox="0 0 24 24">
+          <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+          <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+          <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+          <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+        </svg>
+        Войти через Google
+      </button>
+    </div>
+  </div>
+
+  <div id="licenseScreen" class="license-screen hidden">
+    <div class="license-card">
+      <h3 style="margin-bottom:16px;">Лицензионное соглашение</h3>
+      <div class="license-text-container">
+        <p><strong>Лицензионное соглашение MiS-MaS</strong></p>
+        <p>1. Сервис предоставляется "как есть".</p>
+        <p>2. Запрещено нарушать законодательство.</p>
+        <p>3. Администрация не несет ответственности за контент пользователей.</p>
+        <p>4. Используя сервис, вы соглашаетесь с правилами.</p>
+      </div>
+      <button class="license-accept-btn" id="licenseAcceptBtn">Принимаю</button>
+      <button class="license-reject-btn" id="licenseRejectBtn">Отказываюсь</button>
+    </div>
+  </div>
+
+  <div id="rejectScreen" class="reject-screen hidden">
+    <div class="reject-card">
+      <h3>Доступ запрещён</h3>
+      <p style="margin:16px 0;">Вы отказались от соглашения.</p>
+      <button class="btn btn-primary" id="rejectBackBtn">Вернуться</button>
+    </div>
+  </div>
+
+  <div id="mainInterface" class="hidden" style="display:flex;flex-direction:column;flex:1;">
+    <header class="page-header">
+      <div class="header-logo" id="logoBtn">MiS-MaS</div>
+      <div class="header-nav">
+        <span data-page="profile" class="active">Моя страница</span>
+        <span data-page="feed">Новости</span>
+        <span data-page="messages">Сообщения</span>
+      </div>
+      <button class="logout-btn" id="logoutBtn">Выйти</button>
+    </header>
+
+    <div class="main-layout">
+      <div class="left-menu">
+        <div class="left-menu-item active" data-page="profile">Моя страница</div>
+        <div class="left-menu-item" data-page="feed">Новости</div>
+        <div class="left-menu-item" data-page="messages">Сообщения</div>
+        <div class="left-menu-item" id="settingsMenuBtn">Настройки</div>
+      </div>
+      <div class="content-area" id="contentArea"></div>
+    </div>
+  </div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+  import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-analytics.js";
+  import { getAuth, signInWithPopup, GoogleAuthProvider, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+  import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, doc, setDoc, getDoc, updateDoc, arrayUnion, arrayRemove, where, getDocs, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+  
+  const firebaseConfig = {
+    apiKey: "AIzaSyBxWhSwY0CnzNJDpDv3t93r-ES87VNpHNA",
+    authDomain: "mios-d93a0.firebaseapp.com",
+    projectId: "mios-d93a0",
+    storageBucket: "mios-d93a0.firebasestorage.app",
+    messagingSenderId: "243827096220",
+    appId: "1:243827096220:web:852a55c81570c831134b59",
+    measurementId: "G-CCEP9R9LPD"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const analytics = getAnalytics(app);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+  const googleProvider = new GoogleAuthProvider();
+
+  let currentUserData = { uid: null, name: null, email: null };
+  let currentPage = 'profile';
+  let currentChatId = null;
+  let postsUnsubscribe = null;
+  let messagesUnsubscribe = null;
+
+  function showToast(msg, isError = false) {
+    const toast = document.getElementById('toast');
+    toast.textContent = msg;
+    toast.className = 'toast' + (isError ? ' error' : '');
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 3000);
+  }
+
+  function escapeHtml(s) {
+    if (!s) return '';
+    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  async function createUserProfile(user) {
+    const userRef = doc(db, 'users', user.uid);
+    const userSnap = await getDoc(userRef);
     
+    if (!userSnap.exists()) {
+      await setDoc(userRef, {
+        name: user.displayName || user.email.split('@')[0],
+        email: user.email,
+        uid: user.uid,
+        createdAt: serverTimestamp(),
+        avatar: user.photoURL || null
+      });
+    }
+    
+    currentUserData = {
+      uid: user.uid,
+      name: user.displayName || user.email.split('@')[0],
+      email: user.email
+    };
+    
+    localStorage.setItem('mismos_license', 'true');
+    document.getElementById('licenseScreen').classList.add('hidden');
+    document.getElementById('mainInterface').classList.remove('hidden');
+    document.getElementById('registerScreen').classList.add('hidden');
+    
+    renderPage('profile');
+    showToast(`Добро пожаловать, ${currentUserData.name}!`);
+  }
+
+  async function createPost(text) {
+    if (!text.trim()) return false;
+    try {
+      await addDoc(collection(db, 'posts'), {
+        userId: currentUserData.uid,
+        authorName: currentUserData.name,
+        text: text.trim(),
+        createdAt: serverTimestamp(),
+        likes: []
+      });
+      return true;
+    } catch (e) {
+      console.error('Ошибка создания поста:', e);
+      return false;
+    }
+  }
+
+  async function renderProfile() {
+    const contentArea = document.getElementById('contentArea');
+    contentArea.innerHTML = `
+      <div class="profile-header">
+        <div class="profile-info">
+          <div class="profile-avatar">${escapeHtml(currentUserData.name.charAt(0).toUpperCase())}</div>
+          <div class="profile-details">
+            <h2>${escapeHtml(currentUserData.name)}</h2>
+            <div class="email">${escapeHtml(currentUserData.email)}</div>
+          </div>
+        </div>
+      </div>
+      <div class="post-creator">
+        <textarea id="newPostText" placeholder="Что у вас нового?"></textarea>
+        <button class="btn btn-primary" id="publishPostBtn">Опубликовать</button>
+      </div>
+      <div class="post-feed" id="profilePosts"></div>
+    `;
+    
+    document.getElementById('publishPostBtn').addEventListener('click', async () => {
+      const text = document.getElementById('newPostText').value;
+      const success = await createPost(text);
+      if (success) {
+        document.getElementById('newPostText').value = '';
+        showToast('Пост опубликован!');
+      } else {
+        showToast('Ошибка при публикации', true);
+      }
+    });
+    
+    const q = query(collection(db, 'posts'), where('userId', '==', currentUserData.uid), orderBy('createdAt', 'desc'));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const container = document.getElementById('profilePosts');
+      if (!container) return;
+      
+      const posts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      if (posts.length === 0) {
+        container.innerHTML = '<p style="color:#656565; text-align:center; padding:40px;">У вас пока нет постов</p>';
+      } else {
+        container.innerHTML = posts.map(post => `
+          <div class="post-item">
+            <div class="post-author">
+              <div class="post-author-avatar">${escapeHtml((post.authorName || 'U').charAt(0).toUpperCase())}</div>
+              <div>
+                <div class="post-author-name">${escapeHtml(post.authorName)}</div>
+                <div class="post-date">${post.createdAt?.toDate().toLocaleString('ru-RU') || 'Только что'}</div>
+              </div>
+            </div>
+            <div class="post-text">${escapeHtml(post.text)}</div>
+          </div>
+        `).join('');
+      }
+    });
+    
+    if (postsUnsubscribe) postsUnsubscribe();
+    window.postsUnsubscribe = unsubscribe;
+  }
+
+  async function renderFeed() {
+    const contentArea = document.getElementById('contentArea');
+    contentArea.innerHTML = '<div class="post-feed" id="feedPosts"></div>';
+    
+    const q = query(collection(db, 'posts'), orderBy('createdAt', 'desc'));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const container = document.getElementById('feedPosts');
+      if (!container) return;
+      
+      const posts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      if (posts.length === 0) {
+        container.innerHTML = '<p style="color:#656565; text-align:center; padding:40px;">Новостей пока нет</p>';
+      } else {
+        container.innerHTML = posts.map(post => `
+          <div class="post-item">
+            <div class="post-author">
+              <div class="post-author-avatar">${escapeHtml((post.authorName || 'U').charAt(0).toUpperCase())}</div>
+              <div>
+                <div class="post-author-name">${escapeHtml(post.authorName)}</div>
+                <div class="post-date">${post.createdAt?.toDate().toLocaleString('ru-RU') || 'Только что'}</div>
+              </div>
+            </div>
+            <div class="post-text">${escapeHtml(post.text)}</div>
+          </div>
+        `).join('');
+      }
+    });
+    
+    if (postsUnsubscribe) postsUnsubscribe();
+    window.postsUnsubscribe = unsubscribe;
+  }
+
+  async function sendMessage(chatId, text) {
+    if (!text.trim() || !chatId) return;
+    try {
+      await addDoc(collection(db, 'messages'), {
+        chatId: chatId,
+        fromUserId: currentUserData.uid,
+        fromUserName: currentUserData.name,
+        text: text.trim(),
+        createdAt: serverTimestamp()
+      });
+      
+      await updateDoc(doc(db, 'chats', chatId), {
+        lastMessage: text.trim(),
+        lastUpdated: serverTimestamp()
+      });
+    } catch (e) {
+      console.error('Ошибка отправки:', e);
+      showToast('Ошибка отправки сообщения', true);
+    }
+  }
+
+  async function renderMessages() {
+    const contentArea = document.getElementById('contentArea');
+    contentArea.innerHTML = `
+      <div class="chat-layout">
+        <div class="chat-list-panel">
+          <div class="chat-search">
+            <input type="text" placeholder="Поиск чатов" id="chatSearchInput">
+          </div>
+          <div class="chat-contacts" id="chatContactsList"></div>
+          <button class="btn btn-primary" style="margin:12px;" id="newChatBtn">Новый чат</button>
+        </div>
+        <div class="chat-window" id="chatWindow">
+          <div style="flex:1;display:flex;align-items:center;justify-content:center;color:#888;">Выберите чат</div>
+        </div>
+      </div>
+    `;
+    
+    loadChatList();
+    
+    document.getElementById('newChatBtn').addEventListener('click', async () => {
+      const email = prompt('Введите email пользователя для начала чата:');
+      if (!email) return;
+      
+      const usersRef = collection(db, 'users');
+      const q = query(usersRef, where('email', '==', email));
+      const querySnapshot = await getDocs(q);
+      
+      if (querySnapshot.empty) {
+        showToast('Пользователь не найден', true);
+        return;
+      }
+      
+      const otherUser = querySnapshot.docs[0].data();
+      if (otherUser.uid === currentUserData.uid) {
+        showToast('Нельзя начать чат с самим собой', true);
+        return;
+      }
+      
+      const chatId = [currentUserData.uid, otherUser.uid].sort().join('_');
+      const chatRef = doc(db, 'chats', chatId);
+      const chatSnap = await getDoc(chatRef);
+      
+      if (!chatSnap.exists()) {
+        await setDoc(chatRef, {
+          participants: [currentUserData.uid, otherUser.uid],
+          participantNames: {
+            [currentUserData.uid]: currentUserData.name,
+            [otherUser.uid]: otherUser.name
+          },
+          participantEmails: {
+            [currentUserData.uid]: currentUserData.email,
+            [otherUser.uid]: otherUser.email
+          },
+          createdAt: serverTimestamp(),
+          lastUpdated: serverTimestamp()
+        });
+      }
+      
+      openChat(chatId, otherUser.name);
+    });
+    
+    const searchInput = document.getElementById('chatSearchInput');
+    if (searchInput) {
+      searchInput.addEventListener('input', () => loadChatList(searchInput.value));
+    }
+  }
+
+  async function loadChatList(filter = '') {
+    const chatsRef = collection(db, 'chats');
+    const q = query(chatsRef, where('participants', 'array-contains', currentUserData.uid));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const container = document.getElementById('chatContactsList');
+      if (!container) return;
+      
+      let chats = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      chats = chats.filter(chat => {
+        const otherUserId = chat.participants.find(id => id !== currentUserData.uid);
+        const otherName = chat.participantNames?.[otherUserId] || 'Пользователь';
+        return otherName.toLowerCase().includes(filter.toLowerCase());
+      });
+      
+      if (chats.length === 0) {
+        container.innerHTML = '<div style="padding:20px;text-align:center;color:#888;">Нет чатов</div>';
+        return;
+      }
+      
+      container.innerHTML = chats.map(chat => {
+        const otherUserId = chat.participants.find(id => id !== currentUserData.uid);
+        const otherName = chat.participantNames?.[otherUserId] || 'Пользователь';
+        const lastMsg = chat.lastMessage || 'Нет сообщений';
+        return `
+          <div class="chat-contact ${chat.id === currentChatId ? 'active' : ''}" data-chat-id="${chat.id}" data-chat-name="${escapeHtml(otherName)}">
+            <div class="chat-contact-avatar">${escapeHtml(otherName.charAt(0).toUpperCase())}</div>
+            <div style="flex:1;">
+              <div style="font-weight:600;">${escapeHtml(otherName)}</div>
+              <div style="font-size:12px;color:#888;">${escapeHtml(lastMsg.substring(0, 40))}</div>
+            </div>
+          </div>
+        `;
+      }).join('');
+      
+      document.querySelectorAll('.chat-contact').forEach(el => {
+        el.addEventListener('click', () => {
+          const chatId = el.getAttribute('data-chat-id');
+          const chatName = el.getAttribute('data-chat-name');
+          openChat(chatId, chatName);
+        });
+      });
+    });
+    
+    if (window.chatsUnsubscribe) window.chatsUnsubscribe();
+    window.chatsUnsubscribe = unsubscribe;
+  }
+
+  function openChat(chatId, otherUserName) {
+    currentChatId = chatId;
+    const chatWindow = document.getElementById('chatWindow');
+    if (!chatWindow) return;
+    
+    chatWindow.innerHTML = `
+      <div style="padding:12px 16px; border-bottom:1px solid #e7e8ec; background:#fafbfc;">
+        <strong>Чат с ${escapeHtml(otherUserName)}</strong>
+      </div>
+      <div class="messages-container" id="chatMessages"></div>
+      <div class="chat-input-area">
+        <input type="text" id="chatMessageInput" placeholder="Напишите сообщение...">
+        <button class="send-btn" id="sendChatMsgBtn">Отправить</button>
+      </div>
+    `;
+    
+    const q = query(collection(db, 'messages'), where('chatId', '==', chatId), orderBy('createdAt', 'asc'));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const container = document.getElementById('chatMessages');
+      if (!container) return;
+      
+      const messages = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      container.innerHTML = messages.map(msg => {
+        const isOwn = msg.fromUserId === currentUserData.uid;
+        const time = msg.createdAt?.toDate().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }) || '';
+        return `
+          <div class="message-bubble ${isOwn ? 'own' : ''}">
+            <div class="message-sender">${isOwn ? 'Вы' : escapeHtml(msg.fromUserName)}</div>
+            <div>${escapeHtml(msg.text)}</div>
+            <div class="message-time">${time}</div>
+          </div>
+        `;
+      }).join('');
+      container.scrollTop = container.scrollHeight;
+    });
+    
+    if (window.messagesUnsubscribe) window.messagesUnsubscribe();
+    window.messagesUnsubscribe = unsubscribe;
+    
+    const sendBtn = document.getElementById('sendChatMsgBtn');
+    const msgInput = document.getElementById('chatMessageInput');
+    
+    const handleSend = () => {
+      if (msgInput.value.trim()) {
+        sendMessage(chatId, msgInput.value);
+        msgInput.value = '';
+      }
+    };
+    
+    sendBtn?.addEventListener('click', handleSend);
+    msgInput?.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') handleSend();
+    });
+    
+    loadChatList();
+  }
+
+  async function renderPage(page) {
+    currentPage = page;
+    switch(page) {
+      case 'profile': await renderProfile(); break;
+      case 'feed': await renderFeed(); break;
+      case 'messages': await renderMessages(); break;
+    }
+  }
+
+  function navigateTo(page) {
+    currentPage = page;
+    document.querySelectorAll('.header-nav span').forEach(s => s.classList.remove('active'));
+    document.querySelector(`.header-nav span[data-page="${page}"]`)?.classList.add('active');
+    document.querySelectorAll('.left-menu-item[data-page]').forEach(i => i.classList.remove('active'));
+    document.querySelector(`.left-menu-item[data-page="${page}"]`)?.classList.add('active');
+    renderPage(page);
+  }
+
+  document.getElementById('registerEmailBtn')?.addEventListener('click', async () => {
+    const email = document.getElementById('registerEmail').value;
+    const password = document.getElementById('registerPassword').value;
+    if (password.length < 6) {
+      showToast('Пароль должен быть минимум 6 символов', true);
+      return;
+    }
+    try {
+      const userCred = await createUserWithEmailAndPassword(auth, email, password);
+      await createUserProfile(userCred.user);
+    } catch (e) {
+      showToast(e.message, true);
+    }
+  });
+
+  document.getElementById('loginEmailBtn')?.addEventListener('click', async () => {
+    const email = document.getElementById('registerEmail').value;
+    const password = document.getElementById('registerPassword').value;
+    try {
+      const userCred = await signInWithEmailAndPassword(auth, email, password);
+      await createUserProfile(userCred.user);
+    } catch (e) {
+      showToast(e.message, true);
+    }
+  });
+
+  document.getElementById('googleLoginBtn')?.addEventListener('click', async () => {
+    try {
+      const result = await signInWithPopup(auth, googleProvider);
+      await createUserProfile(result.user);
+    } catch (e) {
+      showToast(e.message, true);
+    }
+  });
+
+  document.getElementById('logoutBtn')?.addEventListener('click', async () => {
+    await signOut(auth);
+    localStorage.removeItem('mismos_license');
+    document.getElementById('mainInterface').classList.add('hidden');
+    document.getElementById('registerScreen').classList.remove('hidden');
+    document.getElementById('licenseScreen').classList.add('hidden');
+    currentUserData = { uid: null, name: null, email: null };
+  });
+
+  document.getElementById('licenseAcceptBtn')?.addEventListener('click', () => {
+    localStorage.setItem('mismos_license', 'true');
+    document.getElementById('licenseScreen').classList.add('hidden');
+    document.getElementById('mainInterface').classList.remove('hidden');
+    renderPage('profile');
+  });
+
+  document.getElementById('licenseRejectBtn')?.addEventListener('click', () => {
+    document.getElementById('licenseScreen').classList.add('hidden');
+    document.getElementById('rejectScreen').classList.remove('hidden');
+  });
+
+  document.getElementById('rejectBackBtn')?.addEventListener('click', () => {
+    document.getElementById('rejectScreen').classList.add('hidden');
+    document.getElementById('registerScreen').classList.remove('hidden');
+  });
+
+  document.querySelectorAll('.header-nav span, .left-menu-item[data-page]').forEach(el => {
+    el.addEventListener('click', () => navigateTo(el.getAttribute('data-page')));
+  });
+
+  document.getElementById('logoBtn')?.addEventListener('click', () => navigateTo('profile'));
+  
+  document.getElementById('settingsMenuBtn')?.addEventListener('click', async () => {
+    const newName = prompt('Введите новое имя:', currentUserData.name);
+    if (newName && newName.trim()) {
+      const userRef = doc(db, 'users', currentUserData.uid);
+      await updateDoc(userRef, { name: newName.trim() });
+      currentUserData.name = newName.trim();
+      showToast('Имя обновлено!');
+      renderPage(currentPage);
+    }
+  });
+
+  onAuthStateChanged(auth, async (user) => {
+    if (user) {
+      const userRef = doc(db, 'users', user.uid);
+      const userSnap = await getDoc(userRef);
+      if (userSnap.exists()) {
+        currentUserData = { uid: user.uid, name: userSnap.data().name, email: userSnap.data().email };
+      } else {
+        await createUserProfile(user);
+      }
+      
+      const licenseAccepted = localStorage.getItem('mismos_license') === 'true';
+      if (licenseAccepted) {
+        document.getElementById('registerScreen').classList.add('hidden');
+        document.getElementById('licenseScreen').classList.add('hidden');
+        document.getElementById('mainInterface').classList.remove('hidden');
+        renderPage('profile');
+      } else {
+        document.getElementById('registerScreen').classList.add('hidden');
+        document.getElementById('licenseScreen').classList.remove('hidden');
+        document.getElementById('mainInterface').classList.add('hidden');
+      }
+    } else {
+      document.getElementById('registerScreen').classList.remove('hidden');
+      document.getElementById('licenseScreen').classList.add('hidden');
+      document.getElementById('mainInterface').classList.add('hidden');
+      document.getElementById('rejectScreen').classList.add('hidden');
+    }
+  });
+</script>
 </body>
 </html>
