@@ -12,7 +12,7 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-analytics.js";
     import { getAuth, signInWithPopup, GoogleAuthProvider, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-    import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, doc, setDoc, getDoc, updateDoc, arrayUnion, arrayRemove, where, getDocs, serverTimestamp, deleteDoc, writeBatch } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, doc, setDoc, getDoc, updateDoc, arrayUnion, arrayRemove, where, getDocs, serverTimestamp, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
     
     const firebaseConfig = {
       apiKey: "AIzaSyBxWhSwY0CnzNJDpDv3t93r-ES87VNpHNA",
@@ -122,7 +122,6 @@
     
     .app { max-width: 100%; margin: 0 auto; width: 100%; min-height: 100vh; display: flex; flex-direction: column; }
     
-    /* Регистрация */
     .register-screen {
       position: fixed; top: 0; left: 0; right: 0; bottom: 0;
       background: linear-gradient(135deg, var(--accent) 0%, #2c4c6e 100%);
@@ -156,7 +155,6 @@
     .divider::after { right: 0; }
     .divider span { background: var(--bg-card); padding: 0 10px; position: relative; z-index: 1; }
     
-    /* Лицензия */
     .license-screen, .reject-screen {
       position: fixed; top: 0; left: 0; right: 0; bottom: 0;
       background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; z-index: 2000;
@@ -176,7 +174,6 @@
     .license-reject-btn { background: var(--danger); color: white; }
     .hidden { display: none !important; }
     
-    /* Хедер */
     .page-header {
       background: var(--bg-header); padding: 10px 14px; display: flex;
       align-items: center; justify-content: space-between; color: var(--text-white);
@@ -187,7 +184,6 @@
     .header-nav span { cursor: pointer; opacity: 0.8; padding: 5px 0; white-space: nowrap; }
     .header-nav span.active { opacity: 1; font-weight: 600; border-bottom: 2px solid white; }
     
-    /* Аватар в хедере с меню */
     .header-avatar {
       width: 32px;
       height: 32px;
@@ -205,7 +201,6 @@
       background: rgba(255,255,255,0.3);
     }
     
-    /* Меню пользователя */
     .user-menu {
       position: fixed;
       top: 50px;
@@ -239,7 +234,6 @@
       color: var(--danger);
     }
     
-    /* Мобильное меню */
     .mobile-menu-btn { display: none; background: none; border: none; color: white; font-size: 22px; cursor: pointer; padding: 4px 8px; }
     .mobile-menu-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 200; display: none; }
     .mobile-menu-overlay.active { display: block; }
@@ -249,14 +243,12 @@
     .mobile-menu-item.active { background: var(--hover); border-left-color: var(--accent); }
     .mobile-menu-close { text-align: right; padding: 10px 14px; cursor: pointer; font-size: 22px; color: var(--text-secondary); border-bottom: 1px solid var(--border); margin-bottom: 10px; }
     
-    /* Основной контент */
     .main-layout { display: flex; flex: 1; background: var(--bg-page); }
     .left-menu { display: block; width: 200px; background: var(--bg-card); border-right: 1px solid var(--border); padding: 8px 0; }
     .left-menu-item { padding: 10px 16px; cursor: pointer; color: var(--accent); font-weight: 500; border-left: 3px solid transparent; font-size: 13px; }
     .left-menu-item.active { background: var(--hover); border-left-color: var(--accent); }
     .content-area { flex: 1; padding: 12px; overflow-y: auto; min-height: calc(100vh - 52px); }
     
-    /* Посты */
     .post-feed { display: flex; flex-direction: column; gap: 12px; }
     .post-item {
       background: var(--bg-card); border-radius: var(--radius-card);
@@ -273,16 +265,14 @@
     .post-date { font-size: 10px; color: var(--text-light); margin-top: 2px; }
     .post-text { font-size: 14px; line-height: 1.5; margin-bottom: 10px; }
     
-    /* Лайки и комментарии */
     .post-actions {
       display: flex;
       gap: 16px;
       padding: 8px 0;
       border-top: 1px solid var(--border);
-      border-bottom: 1px solid var(--border);
       margin-bottom: 10px;
     }
-    .like-btn, .comment-btn {
+    .like-btn {
       background: none;
       border: none;
       cursor: pointer;
@@ -294,121 +284,10 @@
       padding: 4px 8px;
       border-radius: var(--radius-btn);
     }
-    .like-btn:hover, .comment-btn:hover { background: var(--hover); }
+    .like-btn:hover { background: var(--hover); }
     .like-btn.liked { color: var(--like-color); }
     .like-icon { font-size: 16px; }
     
-    /* Комментарии */
-    .comments-preview {
-      margin-top: 8px;
-    }
-    .comment-preview-item {
-      padding: 6px 0;
-      font-size: 12px;
-      border-bottom: 1px solid var(--border);
-    }
-    .comment-preview-author {
-      font-weight: 600;
-      color: var(--accent);
-      margin-right: 6px;
-    }
-    .view-all-comments {
-      background: none;
-      border: none;
-      color: var(--accent);
-      font-size: 11px;
-      cursor: pointer;
-      padding: 6px 0;
-      text-align: left;
-      font-weight: 500;
-    }
-    .comment-input-area {
-      display: flex;
-      gap: 6px;
-      margin-top: 8px;
-    }
-    .comment-input {
-      flex: 1;
-      padding: 8px 10px;
-      border: 1px solid var(--border-input);
-      background: var(--bg-card);
-      color: var(--text-primary);
-      border-radius: var(--radius-btn);
-      font-size: 12px;
-    }
-    .comment-submit {
-      padding: 8px 14px;
-      background: var(--accent);
-      color: white;
-      border: none;
-      border-radius: var(--radius-btn);
-      cursor: pointer;
-      font-size: 12px;
-    }
-    
-    /* Модальное окно комментариев */
-    .modal-overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: rgba(0,0,0,0.7);
-      z-index: 1000;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-    }
-    .modal-content {
-      background: var(--bg-card);
-      border-radius: var(--radius-card);
-      width: 100%;
-      max-width: 400px;
-      max-height: 80vh;
-      display: flex;
-      flex-direction: column;
-    }
-    .modal-header {
-      padding: 14px;
-      border-bottom: 1px solid var(--border);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .modal-header h4 { font-size: 16px; }
-    .modal-close {
-      background: none;
-      border: none;
-      font-size: 22px;
-      cursor: pointer;
-      color: var(--text-secondary);
-    }
-    .modal-body {
-      flex: 1;
-      overflow-y: auto;
-      padding: 12px;
-    }
-    .modal-comment-item {
-      padding: 10px 0;
-      border-bottom: 1px solid var(--border);
-    }
-    .modal-comment-author {
-      font-weight: 600;
-      color: var(--accent);
-      margin-right: 8px;
-      font-size: 13px;
-    }
-    .modal-comment-text {
-      font-size: 13px;
-    }
-    .modal-comment-time {
-      font-size: 10px;
-      color: var(--text-light);
-      margin-top: 4px;
-    }
-    
-    /* Профиль */
     .profile-header { background: var(--bg-card); border-radius: var(--radius-card); padding: 16px; margin-bottom: 12px; border: 1px solid var(--border); cursor: pointer; }
     .profile-header:hover { background: var(--hover); }
     .profile-info { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
@@ -424,7 +303,6 @@
     .btn { padding: 8px 16px; border: none; cursor: pointer; font-weight: 500; border-radius: var(--radius-btn); }
     .btn-primary { background: var(--accent); color: white; }
     
-    /* Поиск людей */
     .people-search { background: var(--bg-card); border-radius: var(--radius-card); padding: 14px; margin-bottom: 12px; border: 1px solid var(--border); }
     .people-search h3 { font-size: 14px; margin-bottom: 10px; }
     .search-input {
@@ -443,7 +321,6 @@
     }
     .friend-request-btn { background: var(--accent); color: white; border: none; padding: 6px 12px; border-radius: var(--radius-btn); cursor: pointer; font-size: 11px; }
     
-    /* Чат */
     .chat-layout { background: var(--bg-card); border-radius: var(--radius-card); display: flex; flex-direction: column; overflow: hidden; min-height: 450px; border: 1px solid var(--border); }
     .chat-list-panel { width: 100%; border-bottom: 1px solid var(--border); }
     .chat-search { padding: 10px; border-bottom: 1px solid var(--border); }
@@ -480,18 +357,15 @@
     }
     .send-btn { background: var(--accent); color: white; border: none; padding: 10px 16px; border-radius: var(--radius-btn); cursor: pointer; font-weight: 500; }
     
-    /* Настройки */
     .settings-panel { background: var(--bg-card); border-radius: var(--radius-card); padding: 16px; border: 1px solid var(--border); }
     .setting-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border); flex-wrap: wrap; gap: 8px; }
     .theme-btn, .animation-toggle { padding: 6px 12px; margin-left: 4px; border: 1px solid var(--border-input); background: var(--bg-card); color: var(--text-primary); cursor: pointer; border-radius: var(--radius-btn); font-size: 12px; }
     .theme-btn.active, .animation-toggle.active { background: var(--accent); color: white; }
     
-    /* Toast */
     .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.85); color: white; padding: 8px 16px; border-radius: 30px; font-size: 12px; z-index: 3000; opacity: 0; transition: opacity 0.3s; pointer-events: none; max-width: 90%; text-align: center; }
     .toast.show { opacity: 1; }
     .toast.error { background: var(--danger); }
     
-    /* Адаптив */
     @media (max-width: 768px) {
       .left-menu { display: none; }
       .mobile-menu-btn { display: block; }
@@ -570,7 +444,6 @@
       <div class="header-avatar" id="headerAvatar">U</div>
     </header>
 
-    <!-- Меню пользователя -->
     <div class="user-menu" id="userMenu">
       <div class="user-menu-item" id="changeNameMenuItem">✏️ Сменить имя</div>
       <div class="user-menu-item danger" id="logoutMenuItem">🚪 Выйти</div>
@@ -629,7 +502,6 @@
   let currentChatId = null;
   let currentChatUserId = null;
   let postsUnsubscribe = null;
-  let currentModalPostId = null;
 
   function showToast(msg, isError = false) {
     const toast = document.getElementById('toast');
@@ -665,42 +537,28 @@
     else document.body.classList.add('animations-off');
   }
   
-  // Обновление имени пользователя везде
   async function updateUserName(newName) {
     if (!newName.trim()) return;
-    const oldName = currentUserData.name;
     currentUserData.name = newName.trim();
     
-    // Обновляем в Auth
     if (auth.currentUser) {
       await updateProfile(auth.currentUser, { displayName: newName.trim() });
     }
     
-    // Обновляем в Firestore users
     await updateDoc(doc(db, 'users', currentUserData.uid), { name: newName.trim() });
     
-    // Обновляем во всех постах пользователя
     const postsQuery = query(collection(db, 'posts'), where('userId', '==', currentUserData.uid));
     const postsSnap = await getDocs(postsQuery);
     for (const postDoc of postsSnap.docs) {
       await updateDoc(postDoc.ref, { authorName: newName.trim() });
     }
     
-    // Обновляем во всех комментариях пользователя
-    const commentsQuery = query(collection(db, 'comments'), where('userId', '==', currentUserData.uid));
-    const commentsSnap = await getDocs(commentsQuery);
-    for (const commentDoc of commentsSnap.docs) {
-      await updateDoc(commentDoc.ref, { userName: newName.trim() });
-    }
-    
-    // Обновляем во всех сообщениях
     const messagesQuery = query(collection(db, 'messages'), where('fromUserId', '==', currentUserData.uid));
     const messagesSnap = await getDocs(messagesQuery);
     for (const msgDoc of messagesSnap.docs) {
       await updateDoc(msgDoc.ref, { fromUserName: newName.trim() });
     }
     
-    // Обновляем в чатах
     const chatsQuery = query(collection(db, 'chats'), where('participants', 'array-contains', currentUserData.uid));
     const chatsSnap = await getDocs(chatsQuery);
     for (const chatDoc of chatsSnap.docs) {
@@ -710,22 +568,13 @@
       await updateDoc(chatDoc.ref, { participantNames: newParticipantNames });
     }
     
-    // Обновляем в заявках в друзья
     const requestsFromQuery = query(collection(db, 'friendRequests'), where('fromUserId', '==', currentUserData.uid));
     const requestsFromSnap = await getDocs(requestsFromQuery);
     for (const reqDoc of requestsFromSnap.docs) {
       await updateDoc(reqDoc.ref, { fromUserName: newName.trim() });
     }
     
-    const requestsToQuery = query(collection(db, 'friendRequests'), where('toUserId', '==', currentUserData.uid));
-    const requestsToSnap = await getDocs(requestsToQuery);
-    for (const reqDoc of requestsToSnap.docs) {
-      await updateDoc(reqDoc.ref, { toUserName: newName.trim() });
-    }
-    
-    // Обновляем аватар в хедере
     document.getElementById('headerAvatar').textContent = newName.charAt(0).toUpperCase();
-    
     showToast('Имя обновлено!');
     renderPage(currentPage);
   }
@@ -748,61 +597,6 @@
         likesCount: (post.likesCount || 0) + 1
       });
     }
-  }
-  
-  async function addComment(postId, text) {
-    if (!text.trim()) return;
-    await addDoc(collection(db, 'comments'), {
-      postId: postId,
-      userId: currentUserData.uid,
-      userName: currentUserData.name,
-      text: text.trim(),
-      createdAt: serverTimestamp()
-    });
-  }
-  
-  // Модальное окно со всеми комментариями
-  function showAllCommentsModal(postId, postAuthorName) {
-    currentModalPostId = postId;
-    const modal = document.createElement('div');
-    modal.className = 'modal-overlay';
-    modal.innerHTML = `
-      <div class="modal-content">
-        <div class="modal-header">
-          <h4>Комментарии к посту ${escapeHtml(postAuthorName)}</h4>
-          <button class="modal-close">✕</button>
-        </div>
-        <div class="modal-body" id="modalCommentsList">
-          <div style="text-align:center; padding:20px;">Загрузка...</div>
-        </div>
-      </div>
-    `;
-    document.body.appendChild(modal);
-    
-    modal.querySelector('.modal-close').addEventListener('click', () => modal.remove());
-    modal.addEventListener('click', (e) => { if (e.target === modal) modal.remove(); });
-    
-    const q = query(collection(db, 'comments'), where('postId', '==', postId), orderBy('createdAt', 'desc'));
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const container = document.getElementById('modalCommentsList');
-      if (!container) return;
-      const comments = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      if (comments.length === 0) {
-        container.innerHTML = '<div style="text-align:center; padding:20px; color:var(--text-light);">Нет комментариев</div>';
-      } else {
-        container.innerHTML = comments.map(c => `
-          <div class="modal-comment-item">
-            <div>
-              <span class="modal-comment-author">${escapeHtml(c.userName)}</span>
-              <span class="modal-comment-text">${escapeHtml(c.text)}</span>
-            </div>
-            <div class="modal-comment-time">${c.createdAt?.toDate().toLocaleString('ru-RU') || 'Только что'}</div>
-          </div>
-        `).join('');
-      }
-    });
-    
-    modal.addEventListener('remove', () => unsubscribe());
   }
   
   async function createUserProfile(user) {
@@ -895,20 +689,31 @@
     return true;
   }
   
+  // ОТПРАВКА СООБЩЕНИЯ - РАБОТАЕТ
   async function sendMessage(chatId, text, toUserId) {
-    if (!text.trim() || !currentUserData.friends.includes(toUserId)) {
-      if (!currentUserData.friends.includes(toUserId)) showToast('Писать можно только друзьям!', true);
+    if (!text.trim()) return false;
+    if (!currentUserData.friends.includes(toUserId)) {
+      showToast('Писать можно только друзьям!', true);
       return false;
     }
-    await addDoc(collection(db, 'messages'), {
+    
+    const messageData = {
       chatId: chatId,
       fromUserId: currentUserData.uid,
       fromUserName: currentUserData.name,
       toUserId: toUserId,
       text: text.trim(),
       createdAt: serverTimestamp()
+    };
+    
+    await addDoc(collection(db, 'messages'), messageData);
+    
+    const chatRef = doc(db, 'chats', chatId);
+    await updateDoc(chatRef, { 
+      lastMessage: text.trim(), 
+      lastUpdated: serverTimestamp() 
     });
-    await updateDoc(doc(db, 'chats', chatId), { lastMessage: text.trim(), lastUpdated: serverTimestamp() });
+    
     return true;
   }
   
@@ -931,85 +736,9 @@
             <span class="like-icon">${isLiked ? '❤️' : '🤍'}</span>
             <span class="likes-count">${likesCount}</span>
           </button>
-          <button class="comment-btn" data-post-id="${postId}">
-            💬 <span class="comments-count">0</span>
-          </button>
-        </div>
-        <div class="comments-preview" id="comments-preview-${postId}"></div>
-        <div class="comment-input-area">
-          <input type="text" class="comment-input" placeholder="Написать комментарий..." data-post-id="${postId}">
-          <button class="comment-submit" data-post-id="${postId}">➤</button>
         </div>
       </div>
     `;
-  }
-  
-  async function loadCommentsForPost(postId, previewContainerId) {
-    const q = query(collection(db, 'comments'), where('postId', '==', postId), orderBy('createdAt', 'desc'));
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const previewContainer = document.getElementById(previewContainerId);
-      if (!previewContainer) return;
-      const comments = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      const commentCount = comments.length;
-      const commentsCountSpan = document.querySelector(`.comment-btn[data-post-id="${postId}"] .comments-count`);
-      if (commentsCountSpan) commentsCountSpan.textContent = commentCount;
-      
-      if (comments.length === 0) {
-        previewContainer.innerHTML = '';
-      } else {
-        const latestComments = comments.slice(0, 2);
-        previewContainer.innerHTML = latestComments.map(c => `
-          <div class="comment-preview-item">
-            <span class="comment-preview-author">${escapeHtml(c.userName)}</span>
-            <span>${escapeHtml(c.text.substring(0, 50))}${c.text.length > 50 ? '...' : ''}</span>
-          </div>
-        `).join('');
-        if (comments.length > 2) {
-          previewContainer.innerHTML += `<button class="view-all-comments" data-post-id="${postId}" data-author="${escapeHtml(previewContainer.closest('.post-item')?.querySelector('.post-author')?.textContent || '')}">📖 Посмотреть все комментарии (${comments.length})</button>`;
-          
-          previewContainer.querySelectorAll('.view-all-comments').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-              e.stopPropagation();
-              const authorName = btn.closest('.post-item')?.querySelector('.post-author')?.textContent || '';
-              showAllCommentsModal(postId, authorName);
-            });
-          });
-        }
-      }
-    });
-    return unsubscribe;
-  }
-  
-  async function attachPostHandlers(container) {
-    container.querySelectorAll('.like-btn').forEach(btn => {
-      btn.addEventListener('click', async (e) => {
-        e.stopPropagation();
-        await toggleLike(btn.dataset.postId);
-      });
-    });
-    
-    container.querySelectorAll('.comment-submit').forEach(btn => {
-      btn.addEventListener('click', async () => {
-        const postId = btn.dataset.postId;
-        const input = container.querySelector(`.comment-input[data-post-id="${postId}"]`);
-        if (input && input.value.trim()) {
-          await addComment(postId, input.value);
-          input.value = '';
-        }
-      });
-    });
-    
-    container.querySelectorAll('.comment-input').forEach(input => {
-      input.addEventListener('keypress', async (e) => {
-        if (e.key === 'Enter') {
-          const postId = input.dataset.postId;
-          if (input.value.trim()) {
-            await addComment(postId, input.value);
-            input.value = '';
-          }
-        }
-      });
-    });
   }
   
   async function renderFeed() {
@@ -1017,7 +746,7 @@
     contentArea.innerHTML = '<div class="post-feed" id="feedPosts"></div>';
     
     const q = query(collection(db, 'posts'), orderBy('createdAt', 'desc'));
-    const unsubscribe = onSnapshot(q, async (snapshot) => {
+    const unsubscribe = onSnapshot(q, (snapshot) => {
       const container = document.getElementById('feedPosts');
       if (!container) return;
       const posts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -1028,11 +757,15 @@
       
       container.innerHTML = '';
       for (const post of posts) {
-        const html = renderPost(post, post.id);
-        container.insertAdjacentHTML('beforeend', html);
-        await loadCommentsForPost(post.id, `comments-preview-${post.id}`);
+        container.insertAdjacentHTML('beforeend', renderPost(post, post.id));
       }
-      await attachPostHandlers(container);
+      
+      container.querySelectorAll('.like-btn').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+          e.stopPropagation();
+          await toggleLike(btn.dataset.postId);
+        });
+      });
     });
     
     if (postsUnsubscribe) postsUnsubscribe();
@@ -1059,7 +792,6 @@
       <div class="post-feed" id="profilePosts"></div>
     `;
     
-    // Клик по профилю для смены имени
     document.getElementById('profileHeader').addEventListener('click', () => {
       const newName = prompt('Введите новое имя:', currentUserData.name);
       if (newName && newName.trim()) {
@@ -1076,7 +808,7 @@
     });
     
     const q = query(collection(db, 'posts'), where('userId', '==', currentUserData.uid), orderBy('createdAt', 'desc'));
-    const unsubscribe = onSnapshot(q, async (snapshot) => {
+    const unsubscribe = onSnapshot(q, (snapshot) => {
       const container = document.getElementById('profilePosts');
       if (!container) return;
       const posts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -1087,11 +819,15 @@
       
       container.innerHTML = '';
       for (const post of posts) {
-        const html = renderPost(post, post.id);
-        container.insertAdjacentHTML('beforeend', html);
-        await loadCommentsForPost(post.id, `comments-preview-${post.id}`);
+        container.insertAdjacentHTML('beforeend', renderPost(post, post.id));
       }
-      await attachPostHandlers(container);
+      
+      container.querySelectorAll('.like-btn').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+          e.stopPropagation();
+          await toggleLike(btn.dataset.postId);
+        });
+      });
     });
     
     if (postsUnsubscribe) postsUnsubscribe();
@@ -1112,7 +848,6 @@
       </div>
     `;
     
-    // Загрузка списка друзей
     if (currentUserData.friends.length === 0) {
       document.getElementById('friendsList').innerHTML = '<p style="color:var(--text-secondary); font-size:13px;">У вас пока нет друзей</p>';
     } else {
@@ -1128,7 +863,6 @@
       `).join('');
     }
     
-    // Загрузка заявок
     const requestsQuery = query(collection(db, 'friendRequests'), where('toUserId', '==', currentUserData.uid), where('status', '==', 'pending'));
     const requestsSnap = await getDocs(requestsQuery);
     const requests = requestsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -1158,7 +892,6 @@
       });
     }
     
-    // Поиск
     const searchInput = document.getElementById('searchPeopleInput');
     searchInput.addEventListener('input', async () => {
       const queryText = searchInput.value.trim().toLowerCase();
@@ -1238,6 +971,7 @@
     currentChatUserId = otherId;
     const chatWindow = document.getElementById('chatWindow');
     if (!chatWindow) return;
+    
     chatWindow.innerHTML = `
       <div style="padding:10px; border-bottom:1px solid var(--border);"><strong>${escapeHtml(otherName)}</strong></div>
       <div class="messages-container" id="chatMessages"></div>
@@ -1246,11 +980,19 @@
         <button class="send-btn" id="sendBtn">Отправить</button>
       </div>
     `;
+    
+    // Подписка на сообщения
     const q = query(collection(db, 'messages'), where('chatId', '==', chatId), orderBy('createdAt', 'asc'));
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const container = document.getElementById('chatMessages');
       if (!container) return;
       const msgs = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+      
+      if (msgs.length === 0) {
+        container.innerHTML = '<div style="text-align:center; padding:20px; color:var(--text-light);">Нет сообщений. Напишите первое!</div>';
+        return;
+      }
+      
       container.innerHTML = msgs.map(m => {
         const isOwn = m.fromUserId === currentUserData.uid;
         const time = m.createdAt?.toDate().toLocaleTimeString('ru-RU', {hour:'2-digit', minute:'2-digit'}) || '';
@@ -1262,14 +1004,20 @@
       }).join('');
       container.scrollTop = container.scrollHeight;
     });
+    
     if (window.msgsUnsub) window.msgsUnsub();
     window.msgsUnsub = unsubscribe;
+    
     const send = async () => {
       const input = document.getElementById('msgInput');
       if (input.value.trim()) {
-        if (await sendMessage(chatId, input.value, otherId)) input.value = '';
+        const success = await sendMessage(chatId, input.value, otherId);
+        if (success) {
+          input.value = '';
+        }
       }
     };
+    
     document.getElementById('sendBtn')?.addEventListener('click', send);
     document.getElementById('msgInput')?.addEventListener('keypress', (e) => { if (e.key === 'Enter') send(); });
   }
@@ -1347,7 +1095,6 @@
     renderPage(page);
   }
   
-  // Меню пользователя
   function toggleUserMenu() {
     const menu = document.getElementById('userMenu');
     menu.classList.toggle('active');
