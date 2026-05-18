@@ -5,15 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="theme-color" content="#4a6d8c">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>MiS-MaS</title>
   
   <!-- Firebase SDK -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-analytics.js";
-    import { getAuth, signInWithPopup, GoogleAuthProvider, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-    import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, doc, setDoc, getDoc, updateDoc, arrayUnion, arrayRemove, where, getDocs, serverTimestamp, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { getAuth, signInWithPopup, GoogleAuthProvider, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+    import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, doc, setDoc, getDoc, updateDoc, arrayUnion, arrayRemove, where, getDocs, serverTimestamp, deleteDoc, writeBatch } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
     
     const firebaseConfig = {
       apiKey: "AIzaSyBxWhSwY0CnzNJDpDv3t93r-ES87VNpHNA",
@@ -31,13 +30,12 @@
     const db = getFirestore(app);
     const googleProvider = new GoogleAuthProvider();
 
-    window.firebaseApp = { app, auth, db, googleProvider };
+    window.firebaseApp = { app, auth, db, googleProvider, updateProfile };
   </script>
   
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
     
-    /* Анимации */
     @keyframes fadeInUp {
       from { opacity: 0; transform: translateY(20px); }
       to { opacity: 1; transform: translateY(0); }
@@ -46,12 +44,8 @@
       from { opacity: 0; transform: scale(0.95); }
       to { opacity: 1; transform: scale(1); }
     }
-    @keyframes slideInLeft {
-      from { opacity: 0; transform: translateX(-15px); }
-      to { opacity: 1; transform: translateX(0); }
-    }
     @keyframes slideInRight {
-      from { opacity: 0; transform: translateX(15px); }
+      from { opacity: 0; transform: translateX(20px); }
       to { opacity: 1; transform: translateX(0); }
     }
     @keyframes messageSlide {
@@ -66,20 +60,16 @@
     
     .animate-fade-up { animation: fadeInUp 0.3s ease-out forwards; }
     .animate-fade-scale { animation: fadeInScale 0.3s ease-out forwards; }
-    .animate-slide-left { animation: slideInLeft 0.25s ease-out forwards; }
     .animate-slide-right { animation: slideInRight 0.25s ease-out forwards; }
     .animate-message { animation: messageSlide 0.2s ease-out forwards; }
     .animate-like { animation: likeHeart 0.3s ease-out; }
     body.animations-off .animate-fade-up,
     body.animations-off .animate-fade-scale,
-    body.animations-off .animate-slide-left,
     body.animations-off .animate-slide-right,
-    body.animations-off .animate-message,
-    body.animations-off .animate-like {
+    body.animations-off .animate-message {
       animation: none !important;
     }
     
-    /* Темы */
     :root {
       --bg-page: #f5f7fb;
       --bg-card: #ffffff;
@@ -141,8 +131,7 @@
     }
     .register-card {
       background: var(--bg-card); padding: 28px 20px;
-      width: 100%; max-width: 360px; box-shadow: 0 20px 40px rgba(0,0,0,0.2);
-      border-radius: var(--radius-card);
+      width: 100%; max-width: 360px; border-radius: var(--radius-card);
     }
     .register-logo { font-size: 28px; font-weight: 700; color: var(--accent); margin-bottom: 8px; text-align: center; }
     .register-subtitle { font-size: 13px; color: var(--text-secondary); margin-bottom: 20px; text-align: center; }
@@ -197,7 +186,58 @@
     .header-nav { display: flex; gap: 14px; font-size: 12px; align-items: center; }
     .header-nav span { cursor: pointer; opacity: 0.8; padding: 5px 0; white-space: nowrap; }
     .header-nav span.active { opacity: 1; font-weight: 600; border-bottom: 2px solid white; }
-    .logout-btn { background: rgba(255,255,255,0.15); border: none; padding: 5px 10px; border-radius: 20px; color: white; cursor: pointer; font-size: 11px; }
+    
+    /* Аватар в хедере с меню */
+    .header-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 14px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .header-avatar:hover {
+      background: rgba(255,255,255,0.3);
+    }
+    
+    /* Меню пользователя */
+    .user-menu {
+      position: fixed;
+      top: 50px;
+      right: 10px;
+      background: var(--bg-card);
+      border-radius: var(--radius-card);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      z-index: 300;
+      min-width: 180px;
+      display: none;
+      border: 1px solid var(--border);
+    }
+    .user-menu.active {
+      display: block;
+      animation: fadeInScale 0.2s ease-out;
+    }
+    .user-menu-item {
+      padding: 12px 16px;
+      cursor: pointer;
+      color: var(--text-primary);
+      border-bottom: 1px solid var(--border);
+      font-size: 13px;
+    }
+    .user-menu-item:last-child {
+      border-bottom: none;
+    }
+    .user-menu-item:hover {
+      background: var(--hover);
+    }
+    .user-menu-item.danger {
+      color: var(--danger);
+    }
     
     /* Мобильное меню */
     .mobile-menu-btn { display: none; background: none; border: none; color: white; font-size: 22px; cursor: pointer; padding: 4px 8px; }
@@ -259,23 +299,118 @@
     .like-icon { font-size: 16px; }
     
     /* Комментарии */
-    .comments-section { margin-top: 10px; display: none; }
-    .comments-section.open { display: block; }
-    .comments-list { max-height: 180px; overflow-y: auto; margin-bottom: 8px; padding-right: 6px; }
-    .comment-item { padding: 6px 0; border-bottom: 1px solid var(--border); font-size: 12px; }
-    .comment-author { font-weight: 600; color: var(--accent); margin-right: 6px; }
-    .comment-text { color: var(--text-primary); }
-    .comment-time { font-size: 9px; color: var(--text-light); margin-top: 2px; }
-    .comment-input-area { display: flex; gap: 6px; margin-top: 8px; }
+    .comments-preview {
+      margin-top: 8px;
+    }
+    .comment-preview-item {
+      padding: 6px 0;
+      font-size: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+    .comment-preview-author {
+      font-weight: 600;
+      color: var(--accent);
+      margin-right: 6px;
+    }
+    .view-all-comments {
+      background: none;
+      border: none;
+      color: var(--accent);
+      font-size: 11px;
+      cursor: pointer;
+      padding: 6px 0;
+      text-align: left;
+      font-weight: 500;
+    }
+    .comment-input-area {
+      display: flex;
+      gap: 6px;
+      margin-top: 8px;
+    }
     .comment-input {
-      flex: 1; padding: 8px 10px; border: 1px solid var(--border-input);
-      background: var(--bg-card); color: var(--text-primary); border-radius: var(--radius-btn);
+      flex: 1;
+      padding: 8px 10px;
+      border: 1px solid var(--border-input);
+      background: var(--bg-card);
+      color: var(--text-primary);
+      border-radius: var(--radius-btn);
       font-size: 12px;
     }
-    .comment-submit { padding: 8px 14px; background: var(--accent); color: white; border: none; border-radius: var(--radius-btn); cursor: pointer; font-size: 12px; }
+    .comment-submit {
+      padding: 8px 14px;
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: var(--radius-btn);
+      cursor: pointer;
+      font-size: 12px;
+    }
+    
+    /* Модальное окно комментариев */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.7);
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .modal-content {
+      background: var(--bg-card);
+      border-radius: var(--radius-card);
+      width: 100%;
+      max-width: 400px;
+      max-height: 80vh;
+      display: flex;
+      flex-direction: column;
+    }
+    .modal-header {
+      padding: 14px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .modal-header h4 { font-size: 16px; }
+    .modal-close {
+      background: none;
+      border: none;
+      font-size: 22px;
+      cursor: pointer;
+      color: var(--text-secondary);
+    }
+    .modal-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 12px;
+    }
+    .modal-comment-item {
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .modal-comment-author {
+      font-weight: 600;
+      color: var(--accent);
+      margin-right: 8px;
+      font-size: 13px;
+    }
+    .modal-comment-text {
+      font-size: 13px;
+    }
+    .modal-comment-time {
+      font-size: 10px;
+      color: var(--text-light);
+      margin-top: 4px;
+    }
     
     /* Профиль */
-    .profile-header { background: var(--bg-card); border-radius: var(--radius-card); padding: 16px; margin-bottom: 12px; border: 1px solid var(--border); }
+    .profile-header { background: var(--bg-card); border-radius: var(--radius-card); padding: 16px; margin-bottom: 12px; border: 1px solid var(--border); cursor: pointer; }
+    .profile-header:hover { background: var(--hover); }
     .profile-info { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
     .profile-avatar {
       width: 60px; height: 60px; border-radius: 50%;
@@ -306,20 +441,7 @@
       border-radius: var(--radius-card);
       margin-bottom: 8px;
     }
-    .user-result strong { font-size: 13px; }
-    .user-result small { font-size: 10px; color: var(--text-secondary); }
     .friend-request-btn { background: var(--accent); color: white; border: none; padding: 6px 12px; border-radius: var(--radius-btn); cursor: pointer; font-size: 11px; }
-    .friend-request-btn.disabled { background: var(--danger); opacity: 0.6; cursor: not-allowed; }
-    .friends-list { margin-top: 12px; }
-    .friend-item {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 10px;
-      background: var(--bg-page);
-      border-radius: var(--radius-card);
-      margin-bottom: 8px;
-    }
     
     /* Чат */
     .chat-layout { background: var(--bg-card); border-radius: var(--radius-card); display: flex; flex-direction: column; overflow: hidden; min-height: 450px; border: 1px solid var(--border); }
@@ -369,25 +491,17 @@
     .toast.show { opacity: 1; }
     .toast.error { background: var(--danger); }
     
-    /* Адаптив - мобильный первый */
+    /* Адаптив */
     @media (max-width: 768px) {
       .left-menu { display: none; }
       .mobile-menu-btn { display: block; }
       .header-nav { display: none; }
       .profile-info { flex-direction: column; text-align: center; }
-      .setting-item { flex-direction: column; align-items: flex-start; }
       .message-bubble { max-width: 90%; }
     }
     @media (min-width: 769px) {
       .mobile-menu-btn, .mobile-menu-overlay, .mobile-menu { display: none !important; }
       .left-menu { display: block !important; }
-    }
-    @media (max-width: 480px) {
-      .content-area { padding: 8px; }
-      .post-item { padding: 12px; }
-      .profile-avatar { width: 50px; height: 50px; font-size: 20px; }
-      .profile-details h2 { font-size: 16px; }
-      .chat-contact-avatar { width: 36px; height: 36px; font-size: 14px; }
     }
   </style>
 </head>
@@ -453,8 +567,14 @@
         <span data-page="people">Люди</span>
         <span data-page="messages">Чаты</span>
       </div>
-      <button class="logout-btn" id="logoutBtn">Выйти</button>
+      <div class="header-avatar" id="headerAvatar">U</div>
     </header>
+
+    <!-- Меню пользователя -->
+    <div class="user-menu" id="userMenu">
+      <div class="user-menu-item" id="changeNameMenuItem">✏️ Сменить имя</div>
+      <div class="user-menu-item danger" id="logoutMenuItem">🚪 Выйти</div>
+    </div>
 
     <div class="mobile-menu-overlay" id="mobileMenuOverlay"></div>
     <div class="mobile-menu" id="mobileMenu">
@@ -464,6 +584,7 @@
       <div class="mobile-menu-item" data-page="people">Люди</div>
       <div class="mobile-menu-item" data-page="messages">Чаты</div>
       <div class="mobile-menu-item" id="settingsMenuBtnMobile">Настройки</div>
+      <div class="mobile-menu-item danger" id="mobileLogoutBtn">Выйти</div>
     </div>
 
     <div class="main-layout">
@@ -484,7 +605,7 @@
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
   import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-analytics.js";
-  import { getAuth, signInWithPopup, GoogleAuthProvider, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+  import { getAuth, signInWithPopup, GoogleAuthProvider, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
   import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, doc, setDoc, getDoc, updateDoc, arrayUnion, arrayRemove, where, getDocs, serverTimestamp, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
   
   const firebaseConfig = {
@@ -508,6 +629,7 @@
   let currentChatId = null;
   let currentChatUserId = null;
   let postsUnsubscribe = null;
+  let currentModalPostId = null;
 
   function showToast(msg, isError = false) {
     const toast = document.getElementById('toast');
@@ -543,7 +665,71 @@
     else document.body.classList.add('animations-off');
   }
   
-  // ЛАЙК - РАБОТАЕТ
+  // Обновление имени пользователя везде
+  async function updateUserName(newName) {
+    if (!newName.trim()) return;
+    const oldName = currentUserData.name;
+    currentUserData.name = newName.trim();
+    
+    // Обновляем в Auth
+    if (auth.currentUser) {
+      await updateProfile(auth.currentUser, { displayName: newName.trim() });
+    }
+    
+    // Обновляем в Firestore users
+    await updateDoc(doc(db, 'users', currentUserData.uid), { name: newName.trim() });
+    
+    // Обновляем во всех постах пользователя
+    const postsQuery = query(collection(db, 'posts'), where('userId', '==', currentUserData.uid));
+    const postsSnap = await getDocs(postsQuery);
+    for (const postDoc of postsSnap.docs) {
+      await updateDoc(postDoc.ref, { authorName: newName.trim() });
+    }
+    
+    // Обновляем во всех комментариях пользователя
+    const commentsQuery = query(collection(db, 'comments'), where('userId', '==', currentUserData.uid));
+    const commentsSnap = await getDocs(commentsQuery);
+    for (const commentDoc of commentsSnap.docs) {
+      await updateDoc(commentDoc.ref, { userName: newName.trim() });
+    }
+    
+    // Обновляем во всех сообщениях
+    const messagesQuery = query(collection(db, 'messages'), where('fromUserId', '==', currentUserData.uid));
+    const messagesSnap = await getDocs(messagesQuery);
+    for (const msgDoc of messagesSnap.docs) {
+      await updateDoc(msgDoc.ref, { fromUserName: newName.trim() });
+    }
+    
+    // Обновляем в чатах
+    const chatsQuery = query(collection(db, 'chats'), where('participants', 'array-contains', currentUserData.uid));
+    const chatsSnap = await getDocs(chatsQuery);
+    for (const chatDoc of chatsSnap.docs) {
+      const chat = chatDoc.data();
+      const newParticipantNames = { ...chat.participantNames };
+      newParticipantNames[currentUserData.uid] = newName.trim();
+      await updateDoc(chatDoc.ref, { participantNames: newParticipantNames });
+    }
+    
+    // Обновляем в заявках в друзья
+    const requestsFromQuery = query(collection(db, 'friendRequests'), where('fromUserId', '==', currentUserData.uid));
+    const requestsFromSnap = await getDocs(requestsFromQuery);
+    for (const reqDoc of requestsFromSnap.docs) {
+      await updateDoc(reqDoc.ref, { fromUserName: newName.trim() });
+    }
+    
+    const requestsToQuery = query(collection(db, 'friendRequests'), where('toUserId', '==', currentUserData.uid));
+    const requestsToSnap = await getDocs(requestsToQuery);
+    for (const reqDoc of requestsToSnap.docs) {
+      await updateDoc(reqDoc.ref, { toUserName: newName.trim() });
+    }
+    
+    // Обновляем аватар в хедере
+    document.getElementById('headerAvatar').textContent = newName.charAt(0).toUpperCase();
+    
+    showToast('Имя обновлено!');
+    renderPage(currentPage);
+  }
+  
   async function toggleLike(postId) {
     const postRef = doc(db, 'posts', postId);
     const postSnap = await getDoc(postRef);
@@ -564,7 +750,6 @@
     }
   }
   
-  // КОММЕНТАРИЙ - РАБОТАЕТ
   async function addComment(postId, text) {
     if (!text.trim()) return;
     await addDoc(collection(db, 'comments'), {
@@ -574,6 +759,50 @@
       text: text.trim(),
       createdAt: serverTimestamp()
     });
+  }
+  
+  // Модальное окно со всеми комментариями
+  function showAllCommentsModal(postId, postAuthorName) {
+    currentModalPostId = postId;
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.innerHTML = `
+      <div class="modal-content">
+        <div class="modal-header">
+          <h4>Комментарии к посту ${escapeHtml(postAuthorName)}</h4>
+          <button class="modal-close">✕</button>
+        </div>
+        <div class="modal-body" id="modalCommentsList">
+          <div style="text-align:center; padding:20px;">Загрузка...</div>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+    
+    modal.querySelector('.modal-close').addEventListener('click', () => modal.remove());
+    modal.addEventListener('click', (e) => { if (e.target === modal) modal.remove(); });
+    
+    const q = query(collection(db, 'comments'), where('postId', '==', postId), orderBy('createdAt', 'desc'));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const container = document.getElementById('modalCommentsList');
+      if (!container) return;
+      const comments = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      if (comments.length === 0) {
+        container.innerHTML = '<div style="text-align:center; padding:20px; color:var(--text-light);">Нет комментариев</div>';
+      } else {
+        container.innerHTML = comments.map(c => `
+          <div class="modal-comment-item">
+            <div>
+              <span class="modal-comment-author">${escapeHtml(c.userName)}</span>
+              <span class="modal-comment-text">${escapeHtml(c.text)}</span>
+            </div>
+            <div class="modal-comment-time">${c.createdAt?.toDate().toLocaleString('ru-RU') || 'Только что'}</div>
+          </div>
+        `).join('');
+      }
+    });
+    
+    modal.addEventListener('remove', () => unsubscribe());
   }
   
   async function createUserProfile(user) {
@@ -595,6 +824,7 @@
       email: user.email,
       friends: userData.friends || []
     };
+    document.getElementById('headerAvatar').textContent = currentUserData.name.charAt(0).toUpperCase();
     localStorage.setItem('mismos_license', 'true');
     document.getElementById('licenseScreen').classList.add('hidden');
     document.getElementById('mainInterface').classList.remove('hidden');
@@ -604,7 +834,6 @@
     showToast(`Добро пожаловать, ${currentUserData.name}!`);
   }
   
-  // Отправка заявки в друзья
   async function sendFriendRequest(toUserId, toUserName) {
     if (toUserId === currentUserData.uid) return showToast('Нельзя добавить себя', true);
     if (currentUserData.friends.includes(toUserId)) return showToast('Уже в друзьях', true);
@@ -706,37 +935,46 @@
             💬 <span class="comments-count">0</span>
           </button>
         </div>
-        <div class="comments-section" data-post-id="${postId}">
-          <div class="comments-list" id="comments-list-${postId}"></div>
-          <div class="comment-input-area">
-            <input type="text" class="comment-input" placeholder="Написать комментарий..." data-post-id="${postId}">
-            <button class="comment-submit" data-post-id="${postId}">➤</button>
-          </div>
+        <div class="comments-preview" id="comments-preview-${postId}"></div>
+        <div class="comment-input-area">
+          <input type="text" class="comment-input" placeholder="Написать комментарий..." data-post-id="${postId}">
+          <button class="comment-submit" data-post-id="${postId}">➤</button>
         </div>
       </div>
     `;
   }
   
-  async function loadComments(postId, containerId) {
-    const q = query(collection(db, 'comments'), where('postId', '==', postId), orderBy('createdAt', 'asc'));
+  async function loadCommentsForPost(postId, previewContainerId) {
+    const q = query(collection(db, 'comments'), where('postId', '==', postId), orderBy('createdAt', 'desc'));
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      const container = document.getElementById(containerId);
-      if (!container) return;
+      const previewContainer = document.getElementById(previewContainerId);
+      if (!previewContainer) return;
       const comments = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       const commentCount = comments.length;
       const commentsCountSpan = document.querySelector(`.comment-btn[data-post-id="${postId}"] .comments-count`);
       if (commentsCountSpan) commentsCountSpan.textContent = commentCount;
       
       if (comments.length === 0) {
-        container.innerHTML = '<div style="padding:6px; color:var(--text-light); text-align:center; font-size:11px;">Нет комментариев</div>';
+        previewContainer.innerHTML = '';
       } else {
-        container.innerHTML = comments.map(c => `
-          <div class="comment-item">
-            <span class="comment-author">${escapeHtml(c.userName)}</span>
-            <span class="comment-text">${escapeHtml(c.text)}</span>
-            <div class="comment-time">${c.createdAt?.toDate().toLocaleTimeString('ru-RU', {hour:'2-digit', minute:'2-digit'}) || ''}</div>
+        const latestComments = comments.slice(0, 2);
+        previewContainer.innerHTML = latestComments.map(c => `
+          <div class="comment-preview-item">
+            <span class="comment-preview-author">${escapeHtml(c.userName)}</span>
+            <span>${escapeHtml(c.text.substring(0, 50))}${c.text.length > 50 ? '...' : ''}</span>
           </div>
         `).join('');
+        if (comments.length > 2) {
+          previewContainer.innerHTML += `<button class="view-all-comments" data-post-id="${postId}" data-author="${escapeHtml(previewContainer.closest('.post-item')?.querySelector('.post-author')?.textContent || '')}">📖 Посмотреть все комментарии (${comments.length})</button>`;
+          
+          previewContainer.querySelectorAll('.view-all-comments').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+              e.stopPropagation();
+              const authorName = btn.closest('.post-item')?.querySelector('.post-author')?.textContent || '';
+              showAllCommentsModal(postId, authorName);
+            });
+          });
+        }
       }
     });
     return unsubscribe;
@@ -747,13 +985,6 @@
       btn.addEventListener('click', async (e) => {
         e.stopPropagation();
         await toggleLike(btn.dataset.postId);
-      });
-    });
-    
-    container.querySelectorAll('.comment-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const section = container.querySelector(`.comments-section[data-post-id="${btn.dataset.postId}"]`);
-        if (section) section.classList.toggle('open');
       });
     });
     
@@ -799,7 +1030,7 @@
       for (const post of posts) {
         const html = renderPost(post, post.id);
         container.insertAdjacentHTML('beforeend', html);
-        await loadComments(post.id, `comments-list-${post.id}`);
+        await loadCommentsForPost(post.id, `comments-preview-${post.id}`);
       }
       await attachPostHandlers(container);
     });
@@ -811,7 +1042,7 @@
   async function renderProfile() {
     const contentArea = document.getElementById('contentArea');
     contentArea.innerHTML = `
-      <div class="profile-header animate-fade-up">
+      <div class="profile-header animate-fade-up" id="profileHeader">
         <div class="profile-info">
           <div class="profile-avatar">${escapeHtml(currentUserData.name.charAt(0).toUpperCase())}</div>
           <div class="profile-details">
@@ -827,6 +1058,14 @@
       </div>
       <div class="post-feed" id="profilePosts"></div>
     `;
+    
+    // Клик по профилю для смены имени
+    document.getElementById('profileHeader').addEventListener('click', () => {
+      const newName = prompt('Введите новое имя:', currentUserData.name);
+      if (newName && newName.trim()) {
+        updateUserName(newName.trim());
+      }
+    });
     
     document.getElementById('publishPostBtn').addEventListener('click', async () => {
       const text = document.getElementById('newPostText').value;
@@ -850,7 +1089,7 @@
       for (const post of posts) {
         const html = renderPost(post, post.id);
         container.insertAdjacentHTML('beforeend', html);
-        await loadComments(post.id, `comments-list-${post.id}`);
+        await loadCommentsForPost(post.id, `comments-preview-${post.id}`);
       }
       await attachPostHandlers(container);
     });
@@ -883,21 +1122,22 @@
         if (friendSnap.exists()) friendsList.push({ id: friendId, ...friendSnap.data() });
       }
       document.getElementById('friendsList').innerHTML = friendsList.map(f => `
-        <div class="friend-item">
+        <div class="user-result">
           <div><strong>${escapeHtml(f.name)}</strong><br><small>${escapeHtml(f.email)}</small></div>
         </div>
       `).join('');
     }
     
-    // Загрузка заявок в друзья
+    // Загрузка заявок
     const requestsQuery = query(collection(db, 'friendRequests'), where('toUserId', '==', currentUserData.uid), where('status', '==', 'pending'));
     const requestsSnap = await getDocs(requestsQuery);
     const requests = requestsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     
+    const resultsDiv = document.getElementById('searchResults');
     if (requests.length > 0) {
-      const requestsHtml = `
-        <div style="margin-top: 16px;">
-          <h3>📨 Входящие заявки</h3>
+      resultsDiv.innerHTML = `
+        <div style="margin-bottom: 16px;">
+          <h3 style="margin-bottom: 8px;">📨 Входящие заявки</h3>
           ${requests.map(req => `
             <div class="user-result">
               <div><strong>${escapeHtml(req.fromUserName)}</strong></div>
@@ -909,7 +1149,6 @@
           `).join('')}
         </div>
       `;
-      document.getElementById('searchResults').insertAdjacentHTML('beforebegin', requestsHtml);
       
       document.querySelectorAll('.accept-request').forEach(btn => {
         btn.addEventListener('click', () => acceptFriendRequest(btn.dataset.id, btn.dataset.fromId, btn.dataset.fromName));
@@ -919,12 +1158,12 @@
       });
     }
     
-    // Поиск пользователей
+    // Поиск
     const searchInput = document.getElementById('searchPeopleInput');
     searchInput.addEventListener('input', async () => {
       const queryText = searchInput.value.trim().toLowerCase();
       if (queryText.length < 2) { 
-        document.getElementById('searchResults').innerHTML = ''; 
+        if (requests.length === 0) resultsDiv.innerHTML = '';
         return; 
       }
       const usersRef = collection(db, 'users');
@@ -935,7 +1174,7 @@
       emailSnap.docs.forEach(doc => usersMap.set(doc.id, doc.data()));
       nameSnap.docs.forEach(doc => usersMap.set(doc.id, doc.data()));
       const users = Array.from(usersMap.values()).filter(u => u.uid !== currentUserData.uid);
-      const resultsDiv = document.getElementById('searchResults');
+      
       if (users.length === 0) {
         resultsDiv.innerHTML = '<p style="color:var(--text-secondary);">Пользователи не найдены</p>';
       } else {
@@ -1072,9 +1311,6 @@
             <button class="animation-toggle ${!animOn ? 'active' : ''}" data-anim="off">Выкл</button>
           </div>
         </div>
-        <div class="setting-item">
-          <div><strong>Аккаунт</strong><br><small>ID: ${currentUserData.uid.substring(0, 12)}...</small></div>
-        </div>
       </div>
     `;
     document.querySelectorAll('.theme-btn').forEach(btn => {
@@ -1111,16 +1347,61 @@
     renderPage(page);
   }
   
+  // Меню пользователя
+  function toggleUserMenu() {
+    const menu = document.getElementById('userMenu');
+    menu.classList.toggle('active');
+  }
+  
+  function closeUserMenu() {
+    document.getElementById('userMenu').classList.remove('active');
+  }
+  
   function toggleMobileMenu(show) {
     const menu = document.getElementById('mobileMenu');
     const overlay = document.getElementById('mobileMenuOverlay');
-    if (show) { menu?.classList.add('active'); overlay?.classList.add('active'); }
+    if (show) { menu?.classList.add('active'); overlay?.classList.add('active'); closeUserMenu(); }
     else { menu?.classList.remove('active'); overlay?.classList.remove('active'); }
   }
   
   document.getElementById('mobileMenuBtn')?.addEventListener('click', () => toggleMobileMenu(true));
   document.getElementById('mobileMenuClose')?.addEventListener('click', () => toggleMobileMenu(false));
   document.getElementById('mobileMenuOverlay')?.addEventListener('click', () => toggleMobileMenu(false));
+  
+  document.getElementById('headerAvatar')?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    toggleUserMenu();
+  });
+  
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('#headerAvatar') && !e.target.closest('#userMenu')) {
+      closeUserMenu();
+    }
+  });
+  
+  document.getElementById('changeNameMenuItem')?.addEventListener('click', () => {
+    closeUserMenu();
+    const newName = prompt('Введите новое имя:', currentUserData.name);
+    if (newName && newName.trim()) {
+      updateUserName(newName.trim());
+    }
+  });
+  
+  document.getElementById('logoutMenuItem')?.addEventListener('click', async () => {
+    closeUserMenu();
+    await signOut(auth);
+    localStorage.removeItem('mismos_license');
+    document.getElementById('mainInterface').classList.add('hidden');
+    document.getElementById('registerScreen').classList.remove('hidden');
+  });
+  
+  document.getElementById('mobileLogoutBtn')?.addEventListener('click', async () => {
+    toggleMobileMenu(false);
+    await signOut(auth);
+    localStorage.removeItem('mismos_license');
+    document.getElementById('mainInterface').classList.add('hidden');
+    document.getElementById('registerScreen').classList.remove('hidden');
+  });
   
   document.getElementById('registerEmailBtn')?.addEventListener('click', async () => {
     const email = document.getElementById('registerEmail').value;
@@ -1140,13 +1421,6 @@
   document.getElementById('googleLoginBtn')?.addEventListener('click', async () => {
     try { await createUserProfile((await signInWithPopup(auth, googleProvider)).user); }
     catch(e) { showToast(e.message, true); }
-  });
-  
-  document.getElementById('logoutBtn')?.addEventListener('click', async () => {
-    await signOut(auth);
-    localStorage.removeItem('mismos_license');
-    document.getElementById('mainInterface').classList.add('hidden');
-    document.getElementById('registerScreen').classList.remove('hidden');
   });
   
   document.getElementById('licenseAcceptBtn')?.addEventListener('click', () => {
@@ -1182,6 +1456,7 @@
       const userSnap = await getDoc(doc(db, 'users', user.uid));
       if (userSnap.exists()) {
         currentUserData = { uid: user.uid, name: userSnap.data().name, email: userSnap.data().email, friends: userSnap.data().friends || [] };
+        document.getElementById('headerAvatar').textContent = currentUserData.name.charAt(0).toUpperCase();
       } else { await createUserProfile(user); }
       if (localStorage.getItem('mismos_license') === 'true') {
         document.getElementById('registerScreen').classList.add('hidden');
