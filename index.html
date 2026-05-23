@@ -423,31 +423,52 @@
       display: block;
     }
     
-    .profile-header { background: var(--bg-card); border-radius: var(--radius-card); padding: 16px; margin-bottom: 12px; border: 1px solid var(--border); cursor: pointer; }
-    .profile-header:hover { background: var(--hover); }
-    .profile-info { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
+    /* Аватар в профиле с кнопкой загрузки */
+    .profile-avatar-wrapper {
+      position: relative;
+      cursor: pointer;
+    }
     .profile-avatar {
-      width: 60px;
-      height: 60px;
+      width: 80px;
+      height: 80px;
       border-radius: 50%;
       background: linear-gradient(135deg, var(--accent), #2c4c6e);
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 24px;
+      font-size: 28px;
       color: white;
       overflow: hidden;
       flex-shrink: 0;
-      cursor: pointer;
     }
     .profile-avatar img {
       width: 100%;
       height: 100%;
       object-fit: cover;
     }
-    .profile-details h2 { font-size: 18px; margin-bottom: 2px; }
-    .profile-details .email { font-size: 11px; color: var(--text-secondary); }
-    .profile-details .friends-count { font-size: 11px; color: var(--text-secondary); margin-top: 2px; }
+    .avatar-edit-overlay {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: rgba(0,0,0,0.6);
+      color: white;
+      font-size: 11px;
+      text-align: center;
+      padding: 4px;
+      border-radius: 0 0 50% 50%;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+    .profile-avatar-wrapper:hover .avatar-edit-overlay {
+      opacity: 1;
+    }
+    
+    .profile-header { background: var(--bg-card); border-radius: var(--radius-card); padding: 16px; margin-bottom: 12px; border: 1px solid var(--border); }
+    .profile-info { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
+    .profile-details h2 { font-size: 20px; margin-bottom: 2px; }
+    .profile-details .email { font-size: 12px; color: var(--text-secondary); }
+    .profile-details .friends-count { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
     
     .btn { padding: 6px 14px; border: none; cursor: pointer; font-weight: 500; border-radius: var(--radius-btn); font-size: 13px; }
     .btn-primary { background: var(--accent); color: white; }
@@ -535,6 +556,7 @@
       .profile-info { flex-direction: column; text-align: center; }
       .message-bubble { max-width: 90%; }
       .post-actions-bar { flex-wrap: wrap; }
+      .profile-avatar { width: 70px; height: 70px; font-size: 24px; }
     }
     @media (min-width: 769px) {
       .mobile-menu-btn, .mobile-menu-overlay, .mobile-menu { display: none !important; }
@@ -609,7 +631,6 @@
 
     <div class="user-menu" id="userMenu">
       <div class="user-menu-item" id="changeNameMenuItem">✏️ Сменить имя</div>
-      <div class="user-menu-item" id="changeAvatarMenuItem">🖼️ Сменить аватар</div>
       <div class="user-menu-item danger" id="logoutMenuItem">🚪 Выйти</div>
     </div>
 
@@ -708,7 +729,7 @@
     else document.body.classList.add('animations-off');
   }
 
-  // ========== ЗАГРУЗКА ФОТО НА IMGBB (НОВЫЙ КЛЮЧ) ==========
+  // ========== ЗАГРУЗКА ФОТО НА IMGBB ==========
   async function uploadToImgBB(file) {
     const formData = new FormData();
     formData.append('image', file);
@@ -891,7 +912,7 @@
   // ========== УПРАВЛЕНИЕ АККАУНТОМ ==========
   async function updateAvatar(avatarUrl) {
     if (!avatarUrl || !avatarUrl.trim()) {
-      showToast('Введите корректный URL', true);
+      showToast('Ошибка загрузки аватарки', true);
       return;
     }
     currentUserData.avatar = avatarUrl.trim();
@@ -919,6 +940,27 @@
     updateHeaderAvatar();
     showToast('Аватар обновлён!');
     renderPage(currentPage);
+  }
+  
+  // Загрузка аватарки через файл
+  async function uploadAvatarFile(file) {
+    if (!file) return;
+    
+    const statusDiv = document.getElementById('avatarUploadStatus');
+    if (statusDiv) {
+      statusDiv.textContent = '⏳ Загрузка аватарки...';
+      statusDiv.style.display = 'block';
+    }
+    
+    const imageUrl = await uploadToImgBB(file);
+    
+    if (imageUrl) {
+      await updateAvatar(imageUrl);
+      if (statusDiv) statusDiv.style.display = 'none';
+    } else {
+      showToast('Ошибка загрузки аватарки', true);
+      if (statusDiv) statusDiv.style.display = 'none';
+    }
   }
   
   function updateHeaderAvatar() {
@@ -1102,11 +1144,14 @@
     const avatarHtml = getAvatarHtml(currentUserData.avatar, currentUserData.name);
     
     contentArea.innerHTML = `
-      <div class="profile-header animate-fade-up" id="profileHeader">
+      <div class="profile-header animate-fade-up">
         <div class="profile-info">
-          <div class="profile-avatar" id="profileAvatar">${avatarHtml}</div>
+          <div class="profile-avatar-wrapper">
+            <div class="profile-avatar" id="profileAvatar">${avatarHtml}</div>
+            <div class="avatar-edit-overlay" id="avatarEditOverlay">📷 Изменить</div>
+          </div>
           <div class="profile-details">
-            <h2>${escapeHtml(currentUserData.name)}</h2>
+            <h2 id="userName">${escapeHtml(currentUserData.name)}</h2>
             <div class="email">${escapeHtml(currentUserData.email)}</div>
             <div class="friends-count">👥 Друзей: ${currentUserData.friends.length}</div>
           </div>
@@ -1129,7 +1174,39 @@
       <div class="post-feed" id="profilePosts"></div>
     `;
     
-    // Обработка прикрепления фото
+    // Загрузка аватарки через файл
+    const avatarFileInput = document.createElement('input');
+    avatarFileInput.type = 'file';
+    avatarFileInput.accept = 'image/*';
+    avatarFileInput.style.display = 'none';
+    document.body.appendChild(avatarFileInput);
+    
+    const avatarWrapper = document.querySelector('.profile-avatar-wrapper');
+    const avatarUploadStatus = document.createElement('div');
+    avatarUploadStatus.id = 'avatarUploadStatus';
+    avatarUploadStatus.className = 'upload-status';
+    avatarUploadStatus.style.marginTop = '5px';
+    avatarWrapper?.parentNode?.insertBefore(avatarUploadStatus, avatarWrapper.nextSibling);
+    
+    avatarWrapper?.addEventListener('click', () => {
+      avatarFileInput.click();
+    });
+    
+    avatarFileInput.addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      await uploadAvatarFile(file);
+      avatarFileInput.value = '';
+    });
+    
+    // Изменение имени по клику
+    const userNameElem = document.getElementById('userName');
+    userNameElem?.addEventListener('click', () => {
+      const newName = prompt('Введите новое имя:', currentUserData.name);
+      if (newName && newName.trim()) updateUserName(newName.trim());
+    });
+    
+    // Обработка прикрепления фото к посту
     const fileInput = document.createElement('input');
     fileInput.type = 'file';
     fileInput.accept = 'image/*';
@@ -1162,7 +1239,7 @@
         uploadStatus.textContent = '✅ Фото загружено!';
         setTimeout(() => uploadStatus.classList.remove('show'), 2000);
       } else {
-        uploadStatus.textContent = '❌ Ошибка загрузки фото. Попробуйте другой файл.';
+        uploadStatus.textContent = '❌ Ошибка загрузки фото';
         setTimeout(() => uploadStatus.classList.remove('show'), 3000);
       }
       
@@ -1173,17 +1250,6 @@
       pendingImageFile = null;
       imagePreviewArea.style.display = 'none';
       imagePreview.src = '';
-    });
-    
-    document.getElementById('profileHeader').addEventListener('click', () => {
-      const newName = prompt('Введите новое имя:', currentUserData.name);
-      if (newName && newName.trim()) updateUserName(newName.trim());
-    });
-    
-    document.getElementById('profileAvatar').addEventListener('click', (e) => {
-      e.stopPropagation();
-      const newAvatar = prompt('Введите URL новой аватарки:', currentUserData.avatar || '');
-      if (newAvatar && newAvatar.trim()) updateAvatar(newAvatar.trim());
     });
     
     document.getElementById('publishPostBtn').addEventListener('click', async () => {
@@ -1543,12 +1609,6 @@
     localStorage.removeItem('mismos_license');
     document.getElementById('mainInterface').classList.add('hidden');
     document.getElementById('registerScreen').classList.remove('hidden');
-  });
-  
-  document.getElementById('changeAvatarMenuItem')?.addEventListener('click', () => {
-    closeUserMenu();
-    const newAvatar = prompt('Введите URL новой аватарки:', currentUserData.avatar || '');
-    if (newAvatar && newAvatar.trim()) updateAvatar(newAvatar.trim());
   });
   
   document.getElementById('licenseAcceptBtn')?.addEventListener('click', () => {
