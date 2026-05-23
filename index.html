@@ -270,6 +270,7 @@
       font-weight: bold;
       font-size: 16px;
       overflow: hidden;
+      flex-shrink: 0;
     }
     .post-avatar img {
       width: 100%;
@@ -322,6 +323,7 @@
       padding: 4px 8px;
       border-radius: var(--radius-btn);
       transition: all 0.2s;
+      z-index: 10;
     }
     .delete-post-btn:hover {
       background: var(--danger);
@@ -342,6 +344,8 @@
       font-size: 24px;
       color: white;
       overflow: hidden;
+      flex-shrink: 0;
+      cursor: pointer;
     }
     .profile-avatar img {
       width: 100%;
@@ -365,16 +369,6 @@
     }
     .btn { padding: 8px 16px; border: none; cursor: pointer; font-weight: 500; border-radius: var(--radius-btn); }
     .btn-primary { background: var(--accent); color: white; }
-    .btn-secondary { background: var(--bg-page); border: 1px solid var(--border-input); color: var(--text-primary); }
-    
-    .avatar-input-area {
-      display: flex;
-      gap: 8px;
-      margin-top: 8px;
-    }
-    .avatar-input-area input {
-      flex: 1;
-    }
     
     .people-search { background: var(--bg-card); border-radius: var(--radius-card); padding: 14px; margin-bottom: 12px; border: 1px solid var(--border); }
     .people-search h3 { font-size: 14px; margin-bottom: 10px; }
@@ -416,6 +410,7 @@
       color: white;
       font-weight: bold;
       overflow: hidden;
+      flex-shrink: 0;
     }
     .chat-contact-avatar img {
       width: 100%;
@@ -628,6 +623,18 @@
     else document.body.classList.add('animations-off');
   }
 
+  // ========== ФУНКЦИЯ ДЛЯ АВАТАРКИ (если нет - буква) ==========
+  function getAvatarHtml(avatarUrl, name) {
+    if (avatarUrl && avatarUrl.trim() !== '') {
+      // Проверяем, что URL не пустой и не "null"
+      if (avatarUrl !== 'null' && avatarUrl !== 'undefined') {
+        return `<img src="${escapeHtml(avatarUrl)}" alt="avatar" onerror="this.style.display='none'; this.parentElement.innerHTML='${escapeHtml((name || 'U').charAt(0).toUpperCase())}'">`;
+      }
+    }
+    // Если нет аватарки или она битая, показываем букву
+    return escapeHtml((name || 'U').charAt(0).toUpperCase());
+  }
+
   // ========== API ЗАПРОСЫ ==========
   async function apiCall(url, options = {}) {
     try {
@@ -676,7 +683,7 @@
       type: 'post',
       userId: currentUserData.id,
       authorName: currentUserData.name,
-      authorAvatar: currentUserData.avatar,
+      authorAvatar: currentUserData.avatar || null,
       text: text.trim() || '',
       imageUrl: imageUrl || null,
       createdAt: new Date().toISOString(),
@@ -778,7 +785,10 @@
 
   // ========== УПРАВЛЕНИЕ АККАУНТОМ ==========
   async function updateAvatar(avatarUrl) {
-    if (!avatarUrl.trim()) return;
+    if (!avatarUrl || !avatarUrl.trim()) {
+      showToast('Введите корректный URL', true);
+      return;
+    }
     currentUserData.avatar = avatarUrl.trim();
     
     if (auth.currentUser) {
@@ -790,7 +800,7 @@
       await updateAccount(account.id, { ...account, avatar: avatarUrl.trim() });
     }
     
-    // Обновляем аватар во всех постах
+    // Обновляем аватар во всех постах пользователя
     const posts = await loadPosts();
     for (const post of posts) {
       if (post.userId === currentUserData.id) {
@@ -809,19 +819,12 @@
   
   function updateHeaderAvatar() {
     const headerAvatar = document.getElementById('headerAvatar');
-    if (currentUserData.avatar) {
-      headerAvatar.innerHTML = `<img src="${escapeHtml(currentUserData.avatar)}" alt="avatar">`;
+    if (currentUserData.avatar && currentUserData.avatar.trim() !== '' && currentUserData.avatar !== 'null') {
+      headerAvatar.innerHTML = `<img src="${escapeHtml(currentUserData.avatar)}" alt="avatar" onerror="this.style.display='none'; this.parentElement.innerHTML='${escapeHtml(currentUserData.name.charAt(0).toUpperCase())}'">`;
     } else {
       headerAvatar.innerHTML = currentUserData.name?.charAt(0).toUpperCase() || 'U';
       headerAvatar.style.background = 'rgba(255,255,255,0.2)';
     }
-  }
-  
-  function getAvatarHtml(avatar, name) {
-    if (avatar) {
-      return `<img src="${escapeHtml(avatar)}" alt="avatar">`;
-    }
-    return escapeHtml((name || 'U').charAt(0).toUpperCase());
   }
 
   async function updateUserName(newName) {
