@@ -7,6 +7,30 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <title>MiS-MaS</title>
   
+  <!-- Firebase SDK -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-analytics.js";
+    import { getAuth, signInWithPopup, GoogleAuthProvider, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+    
+    const firebaseConfig = {
+      apiKey: "AIzaSyBxWhSwY0CnzNJDpDv3t93r-ES87VNpHNA",
+      authDomain: "mios-d93a0.firebaseapp.com",
+      projectId: "mios-d93a0",
+      storageBucket: "mios-d93a0.firebasestorage.app",
+      messagingSenderId: "243827096220",
+      appId: "1:243827096220:web:852a55c81570c831134b59",
+      measurementId: "G-CCEP9R9LPD"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const analytics = getAnalytics(app);
+    const auth = getAuth(app);
+    const googleProvider = new GoogleAuthProvider();
+
+    window.firebaseAuth = { auth, googleProvider, signInWithPopup, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile };
+  </script>
+  
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
     
@@ -227,7 +251,7 @@
     .mobile-menu-item.active { background: var(--hover); border-left-color: var(--accent); }
     .mobile-menu-close { text-align: right; padding: 10px 14px; cursor: pointer; font-size: 22px; color: var(--text-secondary); border-bottom: 1px solid var(--border); margin-bottom: 10px; }
     
-    /* Основной контент - фикс скролла */
+    /* Основной контент */
     .main-layout { display: flex; flex: 1; background: var(--bg-page); min-height: 0; overflow: hidden; }
     .left-menu { 
       display: block; 
@@ -286,6 +310,7 @@
       border-radius: var(--radius-card);
       margin-bottom: 10px;
       object-fit: cover;
+      cursor: pointer;
     }
     
     .post-actions {
@@ -330,6 +355,79 @@
       color: white;
     }
     
+    /* Форма создания поста с кнопкой скрепки */
+    .post-creator { background: var(--bg-card); border-radius: var(--radius-card); padding: 12px; margin-bottom: 12px; border: 1px solid var(--border); }
+    .post-creator textarea { 
+      width: 100%; padding: 10px; border: 1px solid var(--border-input); 
+      background: var(--bg-card); color: var(--text-primary); border-radius: var(--radius-btn); 
+      resize: vertical; min-height: 60px; margin-bottom: 10px; font-family: inherit; font-size: 13px; 
+    }
+    .image-preview-area {
+      position: relative;
+      margin-bottom: 10px;
+      display: none;
+    }
+    .image-preview {
+      max-width: 100%;
+      max-height: 150px;
+      border-radius: var(--radius-card);
+      object-fit: cover;
+    }
+    .remove-image-btn {
+      position: absolute;
+      top: 5px;
+      right: 5px;
+      background: rgba(0,0,0,0.6);
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 24px;
+      height: 24px;
+      cursor: pointer;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .post-actions-bar {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+    .attach-btn {
+      background: var(--hover);
+      border: 1px solid var(--border-input);
+      border-radius: var(--radius-btn);
+      padding: 8px 12px;
+      cursor: pointer;
+      font-size: 18px;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      color: var(--text-secondary);
+    }
+    .attach-btn:hover {
+      background: var(--accent);
+      color: white;
+      border-color: var(--accent);
+    }
+    .attach-icon {
+      font-size: 18px;
+    }
+    .file-input-hidden {
+      display: none;
+    }
+    .upload-status {
+      font-size: 11px;
+      color: var(--text-light);
+      margin-top: 5px;
+      display: none;
+    }
+    .upload-status.show {
+      display: block;
+    }
+    
     .profile-header { background: var(--bg-card); border-radius: var(--radius-card); padding: 16px; margin-bottom: 12px; border: 1px solid var(--border); cursor: pointer; }
     .profile-header:hover { background: var(--hover); }
     .profile-info { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
@@ -356,17 +454,6 @@
     .profile-details .email { font-size: 11px; color: var(--text-secondary); }
     .profile-details .friends-count { font-size: 11px; color: var(--text-secondary); margin-top: 2px; }
     
-    .post-creator { background: var(--bg-card); border-radius: var(--radius-card); padding: 12px; margin-bottom: 12px; border: 1px solid var(--border); }
-    .post-creator textarea { 
-      width: 100%; padding: 10px; border: 1px solid var(--border-input); 
-      background: var(--bg-card); color: var(--text-primary); border-radius: var(--radius-btn); 
-      resize: vertical; min-height: 60px; margin-bottom: 10px; font-family: inherit; font-size: 13px; 
-    }
-    .post-creator input {
-      width: 100%; padding: 10px; border: 1px solid var(--border-input);
-      background: var(--bg-card); color: var(--text-primary); border-radius: var(--radius-btn);
-      margin-bottom: 10px; font-size: 13px;
-    }
     .btn { padding: 8px 16px; border: none; cursor: pointer; font-weight: 500; border-radius: var(--radius-btn); }
     .btn-primary { background: var(--accent); color: white; }
     
@@ -452,6 +539,7 @@
       .header-nav { display: none; }
       .profile-info { flex-direction: column; text-align: center; }
       .message-bubble { max-width: 90%; }
+      .post-actions-bar { flex-wrap: wrap; }
     }
     @media (min-width: 769px) {
       .mobile-menu-btn, .mobile-menu-overlay, .mobile-menu { display: none !important; }
@@ -562,6 +650,7 @@
   const CHANNEL_API_URL = 'https://69da27d226585bd92dd3a309.mockapi.io/messages';
   const ACCOUNTS_API_PRIMARY = 'https://69f32de6bd2396bf530f862c.mockapi.io/ac';
   const ACCOUNTS_API_SECONDARY = 'https://69f32de6bd2396bf530f862c.mockapi.io/ac2';
+  const IMGBB_API_KEY = 'cfeda5eb6c179902b44ba10cb396cb';
 
   // ========== FIREBASE AUTH ==========
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
@@ -588,6 +677,7 @@
   let currentPage = 'profile';
   let currentChatId = null;
   let currentChatUserId = null;
+  let pendingImageFile = null;
 
   function showToast(msg, isError = false) {
     const toast = document.getElementById('toast');
@@ -623,15 +713,34 @@
     else document.body.classList.add('animations-off');
   }
 
-  // ========== ФУНКЦИЯ ДЛЯ АВАТАРКИ (если нет - буква) ==========
-  function getAvatarHtml(avatarUrl, name) {
-    if (avatarUrl && avatarUrl.trim() !== '') {
-      // Проверяем, что URL не пустой и не "null"
-      if (avatarUrl !== 'null' && avatarUrl !== 'undefined') {
-        return `<img src="${escapeHtml(avatarUrl)}" alt="avatar" onerror="this.style.display='none'; this.parentElement.innerHTML='${escapeHtml((name || 'U').charAt(0).toUpperCase())}'">`;
+  // ========== ЗАГРУЗКА ФОТО НА IMGBB ==========
+  async function uploadToImgBB(file) {
+    const formData = new FormData();
+    formData.append('image', file);
+    formData.append('key', IMGBB_API_KEY);
+    
+    try {
+      const response = await fetch('https://api.imgbb.com/1/upload', {
+        method: 'POST',
+        body: formData
+      });
+      const data = await response.json();
+      if (data.success) {
+        return data.data.url;
+      } else {
+        throw new Error('Upload failed');
       }
+    } catch (error) {
+      console.error('ImgBB upload error:', error);
+      return null;
     }
-    // Если нет аватарки или она битая, показываем букву
+  }
+
+  // ========== ФУНКЦИЯ ДЛЯ АВАТАРКИ ==========
+  function getAvatarHtml(avatarUrl, name) {
+    if (avatarUrl && avatarUrl.trim() !== '' && avatarUrl !== 'null' && avatarUrl !== 'undefined') {
+      return `<img src="${escapeHtml(avatarUrl)}" alt="avatar" onerror="this.style.display='none'; this.parentElement.innerHTML='${escapeHtml((name || 'U').charAt(0).toUpperCase())}'">`;
+    }
     return escapeHtml((name || 'U').charAt(0).toUpperCase());
   }
 
@@ -800,7 +909,6 @@
       await updateAccount(account.id, { ...account, avatar: avatarUrl.trim() });
     }
     
-    // Обновляем аватар во всех постах пользователя
     const posts = await loadPosts();
     for (const post of posts) {
       if (post.userId === currentUserData.id) {
@@ -955,7 +1063,7 @@
           </div>
         </div>
         ${post.text ? `<div class="post-text">${escapeHtml(post.text)}</div>` : ''}
-        ${post.imageUrl ? `<img src="${escapeHtml(post.imageUrl)}" class="post-image" alt="post image" onerror="this.style.display='none'">` : ''}
+        ${post.imageUrl ? `<img src="${escapeHtml(post.imageUrl)}" class="post-image" alt="post image" onclick="window.open('${escapeHtml(post.imageUrl)}', '_blank')" onerror="this.style.display='none'">` : ''}
         <div class="post-actions">
           <button class="like-btn ${isLiked ? 'liked' : ''}" data-post-id="${post.id}">
             <span class="like-icon">${isLiked ? '❤️' : '🤍'}</span>
@@ -1010,11 +1118,66 @@
       </div>
       <div class="post-creator animate-fade-up">
         <textarea id="newPostText" placeholder="Что нового?"></textarea>
-        <input type="text" id="newPostImageUrl" placeholder="URL картинки (необязательно)">
-        <button class="btn btn-primary" id="publishPostBtn">Опубликовать</button>
+        <div class="image-preview-area" id="imagePreviewArea">
+          <img class="image-preview" id="imagePreview">
+          <button class="remove-image-btn" id="removeImageBtn">✕</button>
+        </div>
+        <div class="post-actions-bar">
+          <button class="attach-btn" id="attachImageBtn">
+            <span class="attach-icon">📎</span> Прикрепить фото
+          </button>
+          <button class="btn btn-primary" id="publishPostBtn">Опубликовать</button>
+        </div>
+        <div class="upload-status" id="uploadStatus">⏳ Загрузка фото...</div>
       </div>
       <div class="post-feed" id="profilePosts"></div>
     `;
+    
+    // Обработка прикрепления фото
+    const fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.accept = 'image/*';
+    fileInput.style.display = 'none';
+    document.body.appendChild(fileInput);
+    
+    const attachBtn = document.getElementById('attachImageBtn');
+    const imagePreviewArea = document.getElementById('imagePreviewArea');
+    const imagePreview = document.getElementById('imagePreview');
+    const removeImageBtn = document.getElementById('removeImageBtn');
+    const uploadStatus = document.getElementById('uploadStatus');
+    
+    attachBtn.addEventListener('click', () => {
+      fileInput.click();
+    });
+    
+    fileInput.addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      
+      uploadStatus.classList.add('show');
+      uploadStatus.textContent = '⏳ Загрузка фото на сервер...';
+      
+      const imageUrl = await uploadToImgBB(file);
+      
+      if (imageUrl) {
+        pendingImageFile = imageUrl;
+        imagePreview.src = imageUrl;
+        imagePreviewArea.style.display = 'block';
+        uploadStatus.textContent = '✅ Фото загружено!';
+        setTimeout(() => uploadStatus.classList.remove('show'), 2000);
+      } else {
+        uploadStatus.textContent = '❌ Ошибка загрузки фото';
+        setTimeout(() => uploadStatus.classList.remove('show'), 2000);
+      }
+      
+      fileInput.value = '';
+    });
+    
+    removeImageBtn.addEventListener('click', () => {
+      pendingImageFile = null;
+      imagePreviewArea.style.display = 'none';
+      imagePreview.src = '';
+    });
     
     document.getElementById('profileHeader').addEventListener('click', () => {
       const newName = prompt('Введите новое имя:', currentUserData.name);
@@ -1029,10 +1192,13 @@
     
     document.getElementById('publishPostBtn').addEventListener('click', async () => {
       const text = document.getElementById('newPostText').value;
-      const imageUrl = document.getElementById('newPostImageUrl').value;
+      const imageUrl = pendingImageFile;
+      
       if (await createPost(text, imageUrl)) {
         document.getElementById('newPostText').value = '';
-        document.getElementById('newPostImageUrl').value = '';
+        pendingImageFile = null;
+        imagePreviewArea.style.display = 'none';
+        imagePreview.src = '';
         renderProfile();
       }
     });
