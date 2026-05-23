@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="theme-color" content="#4a6d8c">
-  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
   <title>MiS-MaS</title>
   
   <!-- Firebase SDK -->
@@ -121,7 +121,6 @@
     
     .app { max-width: 100%; margin: 0 auto; width: 100%; min-height: 100vh; display: flex; flex-direction: column; overflow-x: hidden; }
     
-    /* Регистрация */
     .register-screen {
       position: fixed; top: 0; left: 0; right: 0; bottom: 0;
       background: linear-gradient(135deg, var(--accent) 0%, #2c4c6e 100%);
@@ -155,7 +154,6 @@
     .divider::after { right: 0; }
     .divider span { background: var(--bg-card); padding: 0 10px; position: relative; z-index: 1; }
     
-    /* Лицензия */
     .license-screen, .reject-screen {
       position: fixed; top: 0; left: 0; right: 0; bottom: 0;
       background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; z-index: 2000;
@@ -175,7 +173,6 @@
     .license-reject-btn { background: var(--danger); color: white; }
     .hidden { display: none !important; }
     
-    /* Хедер */
     .page-header {
       background: var(--bg-header); padding: 10px 14px; display: flex;
       align-items: center; justify-content: space-between; color: var(--text-white);
@@ -251,7 +248,6 @@
     .mobile-menu-item.active { background: var(--hover); border-left-color: var(--accent); }
     .mobile-menu-close { text-align: right; padding: 10px 14px; cursor: pointer; font-size: 22px; color: var(--text-secondary); border-bottom: 1px solid var(--border); margin-bottom: 10px; }
     
-    /* Основной контент */
     .main-layout { display: flex; flex: 1; background: var(--bg-page); min-height: 0; overflow: hidden; }
     .left-menu { 
       display: block; 
@@ -274,7 +270,6 @@
       height: calc(100vh - 52px);
     }
     
-    /* Посты */
     .post-feed { display: flex; flex-direction: column; gap: 12px; }
     .post-item {
       background: var(--bg-card); border-radius: var(--radius-card);
@@ -355,7 +350,6 @@
       color: white;
     }
     
-    /* Форма создания поста с кнопкой скрепки */
     .post-creator { background: var(--bg-card); border-radius: var(--radius-card); padding: 12px; margin-bottom: 12px; border: 1px solid var(--border); }
     .post-creator textarea { 
       width: 100%; padding: 10px; border: 1px solid var(--border-input); 
@@ -393,16 +387,17 @@
       display: flex;
       gap: 10px;
       align-items: center;
+      flex-wrap: wrap;
     }
     .attach-btn {
       background: var(--hover);
       border: 1px solid var(--border-input);
       border-radius: var(--radius-btn);
-      padding: 8px 12px;
+      padding: 6px 12px;
       cursor: pointer;
-      font-size: 18px;
+      font-size: 13px;
       transition: all 0.2s;
-      display: flex;
+      display: inline-flex;
       align-items: center;
       gap: 5px;
       color: var(--text-secondary);
@@ -413,7 +408,7 @@
       border-color: var(--accent);
     }
     .attach-icon {
-      font-size: 18px;
+      font-size: 14px;
     }
     .file-input-hidden {
       display: none;
@@ -454,7 +449,7 @@
     .profile-details .email { font-size: 11px; color: var(--text-secondary); }
     .profile-details .friends-count { font-size: 11px; color: var(--text-secondary); margin-top: 2px; }
     
-    .btn { padding: 8px 16px; border: none; cursor: pointer; font-weight: 500; border-radius: var(--radius-btn); }
+    .btn { padding: 6px 14px; border: none; cursor: pointer; font-weight: 500; border-radius: var(--radius-btn); font-size: 13px; }
     .btn-primary { background: var(--accent); color: white; }
     
     .people-search { background: var(--bg-card); border-radius: var(--radius-card); padding: 14px; margin-bottom: 12px; border: 1px solid var(--border); }
@@ -522,7 +517,7 @@
       background: var(--bg-card); color: var(--text-primary); border-radius: var(--radius-btn);
       font-size: 13px;
     }
-    .send-btn { background: var(--accent); color: white; border: none; padding: 10px 16px; border-radius: var(--radius-btn); cursor: pointer; font-weight: 500; }
+    .send-btn { background: var(--accent); color: white; border: none; padding: 8px 14px; border-radius: var(--radius-btn); cursor: pointer; font-weight: 500; font-size: 13px; }
     
     .settings-panel { background: var(--bg-card); border-radius: var(--radius-card); padding: 16px; border: 1px solid var(--border); }
     .setting-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border); flex-wrap: wrap; gap: 8px; }
@@ -713,10 +708,11 @@
     else document.body.classList.add('animations-off');
   }
 
-  // ========== ЗАГРУЗКА ФОТО НА IMGBB ==========
+  // ========== ЗАГРУЗКА ФОТО НА IMGBB (ИСПРАВЛЕНА) ==========
   async function uploadToImgBB(file) {
     const formData = new FormData();
     formData.append('image', file);
+    // Используем правильный формат API ключа
     formData.append('key', IMGBB_API_KEY);
     
     try {
@@ -725,10 +721,23 @@
         body: formData
       });
       const data = await response.json();
-      if (data.success) {
+      if (data.success && data.data && data.data.url) {
         return data.data.url;
       } else {
-        throw new Error('Upload failed');
+        console.error('ImgBB error:', data);
+        // Пробуем альтернативный формат
+        const altFormData = new FormData();
+        altFormData.append('image', file);
+        altFormData.append('key', IMGBB_API_KEY);
+        const altResponse = await fetch('https://api.imgbb.com/1/upload', {
+          method: 'POST',
+          body: altFormData
+        });
+        const altData = await altResponse.json();
+        if (altData.success && altData.data && altData.data.url) {
+          return altData.data.url;
+        }
+        throw new Error('Upload failed: ' + JSON.stringify(altData));
       }
     } catch (error) {
       console.error('ImgBB upload error:', error);
@@ -1124,7 +1133,7 @@
         </div>
         <div class="post-actions-bar">
           <button class="attach-btn" id="attachImageBtn">
-            <span class="attach-icon">📎</span> Прикрепить фото
+            <span class="attach-icon">📎</span> Фото
           </button>
           <button class="btn btn-primary" id="publishPostBtn">Опубликовать</button>
         </div>
@@ -1155,7 +1164,7 @@
       if (!file) return;
       
       uploadStatus.classList.add('show');
-      uploadStatus.textContent = '⏳ Загрузка фото на сервер...';
+      uploadStatus.textContent = '⏳ Загрузка фото...';
       
       const imageUrl = await uploadToImgBB(file);
       
@@ -1166,8 +1175,8 @@
         uploadStatus.textContent = '✅ Фото загружено!';
         setTimeout(() => uploadStatus.classList.remove('show'), 2000);
       } else {
-        uploadStatus.textContent = '❌ Ошибка загрузки фото';
-        setTimeout(() => uploadStatus.classList.remove('show'), 2000);
+        uploadStatus.textContent = '❌ Ошибка загрузки фото. Попробуйте другой файл.';
+        setTimeout(() => uploadStatus.classList.remove('show'), 3000);
       }
       
       fileInput.value = '';
