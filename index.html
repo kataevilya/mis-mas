@@ -7,30 +7,6 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <title>MiS-MaS</title>
   
-  <!-- Firebase SDK (только для авторизации) -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-analytics.js";
-    import { getAuth, signInWithPopup, GoogleAuthProvider, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-    
-    const firebaseConfig = {
-      apiKey: "AIzaSyBxWhSwY0CnzNJDpDv3t93r-ES87VNpHNA",
-      authDomain: "mios-d93a0.firebaseapp.com",
-      projectId: "mios-d93a0",
-      storageBucket: "mios-d93a0.firebasestorage.app",
-      messagingSenderId: "243827096220",
-      appId: "1:243827096220:web:852a55c81570c831134b59",
-      measurementId: "G-CCEP9R9LPD"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const analytics = getAnalytics(app);
-    const auth = getAuth(app);
-    const googleProvider = new GoogleAuthProvider();
-
-    window.firebaseAuth = { auth, googleProvider, signInWithPopup, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile };
-  </script>
-  
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
     
@@ -116,10 +92,12 @@
       font-size: 14px;
       line-height: 1.4;
       transition: background 0.3s;
+      overflow-x: hidden;
     }
     
-    .app { max-width: 100%; margin: 0 auto; width: 100%; min-height: 100vh; display: flex; flex-direction: column; }
+    .app { max-width: 100%; margin: 0 auto; width: 100%; min-height: 100vh; display: flex; flex-direction: column; overflow-x: hidden; }
     
+    /* Регистрация */
     .register-screen {
       position: fixed; top: 0; left: 0; right: 0; bottom: 0;
       background: linear-gradient(135deg, var(--accent) 0%, #2c4c6e 100%);
@@ -153,6 +131,7 @@
     .divider::after { right: 0; }
     .divider span { background: var(--bg-card); padding: 0 10px; position: relative; z-index: 1; }
     
+    /* Лицензия */
     .license-screen, .reject-screen {
       position: fixed; top: 0; left: 0; right: 0; bottom: 0;
       background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; z-index: 2000;
@@ -172,6 +151,7 @@
     .license-reject-btn { background: var(--danger); color: white; }
     .hidden { display: none !important; }
     
+    /* Хедер */
     .page-header {
       background: var(--bg-header); padding: 10px 14px; display: flex;
       align-items: center; justify-content: space-between; color: var(--text-white);
@@ -194,6 +174,12 @@
       font-size: 14px;
       cursor: pointer;
       transition: background 0.2s;
+      overflow: hidden;
+    }
+    .header-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
     }
     .header-avatar:hover {
       background: rgba(255,255,255,0.3);
@@ -235,18 +221,36 @@
     .mobile-menu-btn { display: none; background: none; border: none; color: white; font-size: 22px; cursor: pointer; padding: 4px 8px; }
     .mobile-menu-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 200; display: none; }
     .mobile-menu-overlay.active { display: block; }
-    .mobile-menu { position: fixed; top: 0; left: -260px; width: 260px; height: 100%; background: var(--bg-card); z-index: 201; transition: left 0.3s ease; padding: 16px 0; }
+    .mobile-menu { position: fixed; top: 0; left: -260px; width: 260px; height: 100%; background: var(--bg-card); z-index: 201; transition: left 0.3s ease; padding: 16px 0; overflow-y: auto; }
     .mobile-menu.active { left: 0; }
     .mobile-menu-item { padding: 12px 20px; cursor: pointer; color: var(--accent); font-weight: 500; border-left: 3px solid transparent; }
     .mobile-menu-item.active { background: var(--hover); border-left-color: var(--accent); }
     .mobile-menu-close { text-align: right; padding: 10px 14px; cursor: pointer; font-size: 22px; color: var(--text-secondary); border-bottom: 1px solid var(--border); margin-bottom: 10px; }
     
-    .main-layout { display: flex; flex: 1; background: var(--bg-page); }
-    .left-menu { display: block; width: 200px; background: var(--bg-card); border-right: 1px solid var(--border); padding: 8px 0; }
+    /* Основной контент - фикс скролла */
+    .main-layout { display: flex; flex: 1; background: var(--bg-page); min-height: 0; overflow: hidden; }
+    .left-menu { 
+      display: block; 
+      width: 200px; 
+      background: var(--bg-card); 
+      border-right: 1px solid var(--border); 
+      padding: 8px 0; 
+      flex-shrink: 0;
+      overflow-y: auto;
+      height: calc(100vh - 52px);
+      position: sticky;
+      top: 52px;
+    }
     .left-menu-item { padding: 10px 16px; cursor: pointer; color: var(--accent); font-weight: 500; border-left: 3px solid transparent; font-size: 13px; }
     .left-menu-item.active { background: var(--hover); border-left-color: var(--accent); }
-    .content-area { flex: 1; padding: 12px; overflow-y: auto; min-height: calc(100vh - 52px); }
+    .content-area { 
+      flex: 1; 
+      padding: 12px; 
+      overflow-y: auto; 
+      height: calc(100vh - 52px);
+    }
     
+    /* Посты */
     .post-feed { display: flex; flex-direction: column; gap: 12px; }
     .post-item {
       background: var(--bg-card); border-radius: var(--radius-card);
@@ -255,14 +259,33 @@
     }
     .post-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
     .post-avatar {
-      width: 40px; height: 40px; border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
       background: linear-gradient(135deg, var(--accent), #2c4c6e);
-      display: flex; align-items: center; justify-content: center; color: white; font-weight: bold;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: bold;
       font-size: 16px;
+      overflow: hidden;
+    }
+    .post-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
     }
     .post-author { font-weight: 600; color: var(--accent); font-size: 14px; }
     .post-date { font-size: 10px; color: var(--text-light); margin-top: 2px; }
     .post-text { font-size: 14px; line-height: 1.5; margin-bottom: 10px; }
+    .post-image {
+      max-width: 100%;
+      max-height: 300px;
+      border-radius: var(--radius-card);
+      margin-bottom: 10px;
+      object-fit: cover;
+    }
     
     .post-actions {
       display: flex;
@@ -309,17 +332,49 @@
     .profile-header:hover { background: var(--hover); }
     .profile-info { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
     .profile-avatar {
-      width: 60px; height: 60px; border-radius: 50%;
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
       background: linear-gradient(135deg, var(--accent), #2c4c6e);
-      display: flex; align-items: center; justify-content: center; font-size: 24px; color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      color: white;
+      overflow: hidden;
+    }
+    .profile-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
     }
     .profile-details h2 { font-size: 18px; margin-bottom: 2px; }
     .profile-details .email { font-size: 11px; color: var(--text-secondary); }
     .profile-details .friends-count { font-size: 11px; color: var(--text-secondary); margin-top: 2px; }
+    
     .post-creator { background: var(--bg-card); border-radius: var(--radius-card); padding: 12px; margin-bottom: 12px; border: 1px solid var(--border); }
-    .post-creator textarea { width: 100%; padding: 10px; border: 1px solid var(--border-input); background: var(--bg-card); color: var(--text-primary); border-radius: var(--radius-btn); resize: vertical; min-height: 60px; margin-bottom: 10px; font-family: inherit; font-size: 13px; }
+    .post-creator textarea { 
+      width: 100%; padding: 10px; border: 1px solid var(--border-input); 
+      background: var(--bg-card); color: var(--text-primary); border-radius: var(--radius-btn); 
+      resize: vertical; min-height: 60px; margin-bottom: 10px; font-family: inherit; font-size: 13px; 
+    }
+    .post-creator input {
+      width: 100%; padding: 10px; border: 1px solid var(--border-input);
+      background: var(--bg-card); color: var(--text-primary); border-radius: var(--radius-btn);
+      margin-bottom: 10px; font-size: 13px;
+    }
     .btn { padding: 8px 16px; border: none; cursor: pointer; font-weight: 500; border-radius: var(--radius-btn); }
     .btn-primary { background: var(--accent); color: white; }
+    .btn-secondary { background: var(--bg-page); border: 1px solid var(--border-input); color: var(--text-primary); }
+    
+    .avatar-input-area {
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
+    }
+    .avatar-input-area input {
+      flex: 1;
+    }
     
     .people-search { background: var(--bg-card); border-radius: var(--radius-card); padding: 14px; margin-bottom: 12px; border: 1px solid var(--border); }
     .people-search h3 { font-size: 14px; margin-bottom: 10px; }
@@ -351,9 +406,21 @@
     .chat-contact { padding: 10px; display: flex; align-items: center; gap: 10px; cursor: pointer; border-bottom: 1px solid var(--border); }
     .chat-contact.active { background: var(--hover); }
     .chat-contact-avatar {
-      width: 40px; height: 40px; border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
       background: linear-gradient(135deg, var(--accent), #2c4c6e);
-      display: flex; align-items: center; justify-content: center; color: white; font-weight: bold;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: bold;
+      overflow: hidden;
+    }
+    .chat-contact-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
     }
     .chat-window { display: flex; flex-direction: column; height: 380px; }
     .messages-container { flex: 1; padding: 10px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; }
@@ -459,11 +526,12 @@
         <span data-page="people">Люди</span>
         <span data-page="messages">Чаты</span>
       </div>
-      <div class="header-avatar" id="headerAvatar">U</div>
+      <div class="header-avatar" id="headerAvatar"></div>
     </header>
 
     <div class="user-menu" id="userMenu">
       <div class="user-menu-item" id="changeNameMenuItem">✏️ Сменить имя</div>
+      <div class="user-menu-item" id="changeAvatarMenuItem">🖼️ Сменить аватар</div>
       <div class="user-menu-item danger" id="logoutMenuItem">🚪 Выйти</div>
     </div>
 
@@ -494,13 +562,13 @@
 <div id="toast" class="toast"></div>
 
 <script type="module">
-  // ========== API ENDPOINTS (ВАШИ) ==========
+  // ========== API ENDPOINTS ==========
   const API_URL = 'https://69da27d226585bd92dd3a309.mockapi.io/mi';
   const CHANNEL_API_URL = 'https://69da27d226585bd92dd3a309.mockapi.io/messages';
   const ACCOUNTS_API_PRIMARY = 'https://69f32de6bd2396bf530f862c.mockapi.io/ac';
   const ACCOUNTS_API_SECONDARY = 'https://69f32de6bd2396bf530f862c.mockapi.io/ac2';
 
-  // ========== FIREBASE AUTH (только для Google входа) ==========
+  // ========== FIREBASE AUTH ==========
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
   import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-analytics.js";
   import { getAuth, signInWithPopup, GoogleAuthProvider, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
@@ -521,14 +589,11 @@
   const googleProvider = new GoogleAuthProvider();
 
   // ========== ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ ==========
-  let currentUserData = { id: null, name: null, email: null, friends: [], binId: null };
+  let currentUserData = { id: null, name: null, email: null, friends: [], avatar: null };
   let currentPage = 'profile';
   let currentChatId = null;
   let currentChatUserId = null;
-  let postsRefreshTimer = null;
-  let messagesRefreshTimer = null;
 
-  // ========== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ==========
   function showToast(msg, isError = false) {
     const toast = document.getElementById('toast');
     toast.textContent = msg;
@@ -563,7 +628,7 @@
     else document.body.classList.add('animations-off');
   }
 
-  // ========== API ЗАПРОСЫ К MOCKAPI ==========
+  // ========== API ЗАПРОСЫ ==========
   async function apiCall(url, options = {}) {
     try {
       const response = await fetch(url, options);
@@ -575,7 +640,6 @@
     }
   }
 
-  // Аккаунты
   async function findAccountByEmail(email) {
     const data = await apiCall(`${ACCOUNTS_API_PRIMARY}?email=${encodeURIComponent(email)}`);
     if (data && data.length > 0) return data[0];
@@ -598,7 +662,6 @@
     });
   }
 
-  // Посты
   async function loadPosts() {
     const data = await apiCall(CHANNEL_API_URL);
     if (data && Array.isArray(data)) {
@@ -607,13 +670,15 @@
     return JSON.parse(localStorage.getItem('mismos_posts') || '[]');
   }
 
-  async function createPost(text) {
-    if (!text.trim()) return false;
+  async function createPost(text, imageUrl = null) {
+    if (!text.trim() && !imageUrl) return false;
     const postData = {
       type: 'post',
       userId: currentUserData.id,
       authorName: currentUserData.name,
-      text: text.trim(),
+      authorAvatar: currentUserData.avatar,
+      text: text.trim() || '',
+      imageUrl: imageUrl || null,
       createdAt: new Date().toISOString(),
       likedBy: [],
       likesCount: 0
@@ -627,7 +692,6 @@
       showToast('Пост опубликован!');
       return true;
     }
-    // fallback localStorage
     const localPosts = JSON.parse(localStorage.getItem('mismos_posts') || '[]');
     postData.id = Date.now().toString();
     localPosts.push(postData);
@@ -643,7 +707,6 @@
       showToast('Пост удалён');
       return true;
     }
-    // fallback localStorage
     const localPosts = JSON.parse(localStorage.getItem('mismos_posts') || '[]');
     const filtered = localPosts.filter(p => p.id != postId);
     localStorage.setItem('mismos_posts', JSON.stringify(filtered));
@@ -659,9 +722,7 @@
     const likedBy = post.likedBy || [];
     const isLiked = likedBy.includes(currentUserData.id);
     
-    let newLikedBy;
-    let newLikesCount;
-    
+    let newLikedBy, newLikesCount;
     if (isLiked) {
       newLikedBy = likedBy.filter(id => id !== currentUserData.id);
       newLikesCount = (post.likesCount || 1) - 1;
@@ -670,27 +731,15 @@
       newLikesCount = (post.likesCount || 0) + 1;
     }
     
-    const result = await apiCall(`${CHANNEL_API_URL}/${postId}`, {
+    await apiCall(`${CHANNEL_API_URL}/${postId}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ ...post, likedBy: newLikedBy, likesCount: newLikesCount })
     });
     
-    if (!result) {
-      // fallback localStorage
-      const localPosts = JSON.parse(localStorage.getItem('mismos_posts') || '[]');
-      const index = localPosts.findIndex(p => p.id == postId);
-      if (index !== -1) {
-        localPosts[index].likedBy = newLikedBy;
-        localPosts[index].likesCount = newLikesCount;
-        localStorage.setItem('mismos_posts', JSON.stringify(localPosts));
-      }
-    }
-    
     renderPage(currentPage);
   }
 
-  // Сообщения
   async function loadMessages() {
     const data = await apiCall(API_URL);
     return data && Array.isArray(data) ? data : [];
@@ -718,26 +767,96 @@
       body: JSON.stringify(messageData)
     });
     
-    if (result) {
-      showToast('Сообщение отправлено');
-      return true;
-    }
+    if (result) return true;
     
-    // fallback localStorage
     const localMsgs = JSON.parse(localStorage.getItem('mismos_messages') || '[]');
     messageData.id = Date.now().toString();
     localMsgs.push(messageData);
     localStorage.setItem('mismos_messages', JSON.stringify(localMsgs));
-    showToast('Сообщение сохранено локально');
     return true;
   }
 
-  // Друзья
+  // ========== УПРАВЛЕНИЕ АККАУНТОМ ==========
+  async function updateAvatar(avatarUrl) {
+    if (!avatarUrl.trim()) return;
+    currentUserData.avatar = avatarUrl.trim();
+    
+    if (auth.currentUser) {
+      await updateProfile(auth.currentUser, { photoURL: avatarUrl.trim() });
+    }
+    
+    const account = await findAccountByEmail(currentUserData.email);
+    if (account) {
+      await updateAccount(account.id, { ...account, avatar: avatarUrl.trim() });
+    }
+    
+    // Обновляем аватар во всех постах
+    const posts = await loadPosts();
+    for (const post of posts) {
+      if (post.userId === currentUserData.id) {
+        await apiCall(`${CHANNEL_API_URL}/${post.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ...post, authorAvatar: avatarUrl.trim() })
+        });
+      }
+    }
+    
+    updateHeaderAvatar();
+    showToast('Аватар обновлён!');
+    renderPage(currentPage);
+  }
+  
+  function updateHeaderAvatar() {
+    const headerAvatar = document.getElementById('headerAvatar');
+    if (currentUserData.avatar) {
+      headerAvatar.innerHTML = `<img src="${escapeHtml(currentUserData.avatar)}" alt="avatar">`;
+    } else {
+      headerAvatar.innerHTML = currentUserData.name?.charAt(0).toUpperCase() || 'U';
+      headerAvatar.style.background = 'rgba(255,255,255,0.2)';
+    }
+  }
+  
+  function getAvatarHtml(avatar, name) {
+    if (avatar) {
+      return `<img src="${escapeHtml(avatar)}" alt="avatar">`;
+    }
+    return escapeHtml((name || 'U').charAt(0).toUpperCase());
+  }
+
+  async function updateUserName(newName) {
+    if (!newName.trim()) return;
+    currentUserData.name = newName.trim();
+    
+    if (auth.currentUser) {
+      await updateProfile(auth.currentUser, { displayName: newName.trim() });
+    }
+    
+    const account = await findAccountByEmail(currentUserData.email);
+    if (account) {
+      await updateAccount(account.id, { ...account, name: newName.trim() });
+    }
+    
+    const posts = await loadPosts();
+    for (const post of posts) {
+      if (post.userId === currentUserData.id) {
+        await apiCall(`${CHANNEL_API_URL}/${post.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ...post, authorName: newName.trim() })
+        });
+      }
+    }
+    
+    updateHeaderAvatar();
+    showToast('Имя обновлено!');
+    renderPage(currentPage);
+  }
+
   async function sendFriendRequest(toUserId, toUserName) {
     if (toUserId === currentUserData.id) return showToast('Нельзя добавить себя', true);
     if (currentUserData.friends.includes(toUserId)) return showToast('Уже в друзьях', true);
     
-    // Сохраняем заявку в localStorage (так как в MockAPI нет отдельной таблицы)
     const requests = JSON.parse(localStorage.getItem('mismos_friend_requests') || '[]');
     if (requests.some(r => r.fromUserId === currentUserData.id && r.toUserId === toUserId && r.status === 'pending')) {
       return showToast('Заявка уже отправлена', true);
@@ -761,18 +880,15 @@
       currentUserData.friends.push(fromUserId);
     }
     
-    // Обновляем в аккаунте
     const account = await findAccountByEmail(currentUserData.email);
     if (account) {
       await updateAccount(account.id, { ...account, friends: currentUserData.friends });
     }
     
-    // Удаляем заявку
     const requests = JSON.parse(localStorage.getItem('mismos_friend_requests') || '[]');
     const filtered = requests.filter(r => r.id !== requestId);
     localStorage.setItem('mismos_friend_requests', JSON.stringify(filtered));
     
-    // Создаём чат
     const chatId = [currentUserData.id, fromUserId].sort().join('_');
     const chats = JSON.parse(localStorage.getItem('mismos_chats') || '[]');
     if (!chats.find(c => c.id === chatId)) {
@@ -800,7 +916,6 @@
     renderPage(currentPage);
   }
 
-  // Загрузка данных
   async function loadChats() {
     const chats = JSON.parse(localStorage.getItem('mismos_chats') || '[]');
     const messages = await loadMessages();
@@ -824,18 +939,20 @@
     const likesCount = post.likesCount || 0;
     const dateStr = new Date(post.createdAt).toLocaleString('ru-RU');
     const isAuthor = post.userId === currentUserData.id;
+    const avatarHtml = getAvatarHtml(post.authorAvatar, post.authorName);
     
     return `
       <div class="post-item animate-fade-up" data-post-id="${post.id}">
         ${isAuthor ? `<button class="delete-post-btn" data-post-id="${post.id}" title="Удалить пост">🗑️</button>` : ''}
         <div class="post-header">
-          <div class="post-avatar">${escapeHtml((post.authorName || 'U').charAt(0).toUpperCase())}</div>
+          <div class="post-avatar">${avatarHtml}</div>
           <div>
             <div class="post-author">${escapeHtml(post.authorName)}</div>
             <div class="post-date">${dateStr}</div>
           </div>
         </div>
-        <div class="post-text">${escapeHtml(post.text)}</div>
+        ${post.text ? `<div class="post-text">${escapeHtml(post.text)}</div>` : ''}
+        ${post.imageUrl ? `<img src="${escapeHtml(post.imageUrl)}" class="post-image" alt="post image" onerror="this.style.display='none'">` : ''}
         <div class="post-actions">
           <button class="like-btn ${isLiked ? 'liked' : ''}" data-post-id="${post.id}">
             <span class="like-icon">${isLiked ? '❤️' : '🤍'}</span>
@@ -875,10 +992,12 @@
 
   async function renderProfile() {
     const contentArea = document.getElementById('contentArea');
+    const avatarHtml = getAvatarHtml(currentUserData.avatar, currentUserData.name);
+    
     contentArea.innerHTML = `
       <div class="profile-header animate-fade-up" id="profileHeader">
         <div class="profile-info">
-          <div class="profile-avatar">${escapeHtml(currentUserData.name.charAt(0).toUpperCase())}</div>
+          <div class="profile-avatar" id="profileAvatar">${avatarHtml}</div>
           <div class="profile-details">
             <h2>${escapeHtml(currentUserData.name)}</h2>
             <div class="email">${escapeHtml(currentUserData.email)}</div>
@@ -888,6 +1007,7 @@
       </div>
       <div class="post-creator animate-fade-up">
         <textarea id="newPostText" placeholder="Что нового?"></textarea>
+        <input type="text" id="newPostImageUrl" placeholder="URL картинки (необязательно)">
         <button class="btn btn-primary" id="publishPostBtn">Опубликовать</button>
       </div>
       <div class="post-feed" id="profilePosts"></div>
@@ -895,15 +1015,21 @@
     
     document.getElementById('profileHeader').addEventListener('click', () => {
       const newName = prompt('Введите новое имя:', currentUserData.name);
-      if (newName && newName.trim()) {
-        updateUserName(newName.trim());
-      }
+      if (newName && newName.trim()) updateUserName(newName.trim());
+    });
+    
+    document.getElementById('profileAvatar').addEventListener('click', (e) => {
+      e.stopPropagation();
+      const newAvatar = prompt('Введите URL новой аватарки:', currentUserData.avatar || '');
+      if (newAvatar && newAvatar.trim()) updateAvatar(newAvatar.trim());
     });
     
     document.getElementById('publishPostBtn').addEventListener('click', async () => {
       const text = document.getElementById('newPostText').value;
-      if (await createPost(text)) {
+      const imageUrl = document.getElementById('newPostImageUrl').value;
+      if (await createPost(text, imageUrl)) {
         document.getElementById('newPostText').value = '';
+        document.getElementById('newPostImageUrl').value = '';
         renderProfile();
       }
     });
@@ -947,7 +1073,6 @@
       </div>
     `;
     
-    // Список друзей
     const friendsListDiv = document.getElementById('friendsList');
     if (currentUserData.friends.length === 0) {
       friendsListDiv.innerHTML = '<p style="color:var(--text-secondary); font-size:13px;">У вас пока нет друзей</p>';
@@ -964,7 +1089,6 @@
       `).join('');
     }
     
-    // Входящие заявки
     const requests = JSON.parse(localStorage.getItem('mismos_friend_requests') || '[]');
     const incoming = requests.filter(r => r.toUserId === currentUserData.id && r.status === 'pending');
     const resultsDiv = document.getElementById('searchResults');
@@ -993,7 +1117,6 @@
       });
     }
     
-    // Поиск
     const searchInput = document.getElementById('searchPeopleInput');
     searchInput.addEventListener('input', async () => {
       const queryEmail = searchInput.value.trim().toLowerCase();
@@ -1058,7 +1181,7 @@
     
     container.innerHTML = filtered.map(chat => `
       <div class="chat-contact ${chat.id === currentChatId ? 'active' : ''}" data-chat-id="${chat.id}" data-chat-name="${escapeHtml(chat.otherName)}" data-chat-userid="${chat.otherId}">
-        <div class="chat-contact-avatar">${escapeHtml(chat.otherName.charAt(0).toUpperCase())}</div>
+        <div class="chat-contact-avatar">${getAvatarHtml(null, chat.otherName)}</div>
         <div>
           <div style="font-weight:600;">${escapeHtml(chat.otherName)}</div>
           <div style="font-size:11px;color:var(--text-light);">${escapeHtml((chat.lastMessage || '').substring(0, 30))}</div>
@@ -1177,50 +1300,16 @@
     renderPage(page);
   }
 
-  // ========== УПРАВЛЕНИЕ АККАУНТОМ ==========
-  async function updateUserName(newName) {
-    if (!newName.trim()) return;
-    const oldName = currentUserData.name;
-    currentUserData.name = newName.trim();
-    
-    // Обновляем в Firebase Auth
-    if (auth.currentUser) {
-      await updateProfile(auth.currentUser, { displayName: newName.trim() });
-    }
-    
-    // Обновляем в MockAPI
-    const account = await findAccountByEmail(currentUserData.email);
-    if (account) {
-      await updateAccount(account.id, { ...account, name: newName.trim() });
-    }
-    
-    // Обновляем во всех постах
-    const posts = await loadPosts();
-    for (const post of posts) {
-      if (post.userId === currentUserData.id) {
-        await apiCall(`${CHANNEL_API_URL}/${post.id}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ ...post, authorName: newName.trim() })
-        });
-      }
-    }
-    
-    document.getElementById('headerAvatar').textContent = newName.charAt(0).toUpperCase();
-    showToast('Имя обновлено!');
-    renderPage(currentPage);
-  }
-
+  // ========== УПРАВЛЕНИЕ АККАУНТОМ (ПРОДОЛЖЕНИЕ) ==========
   async function createUserProfileFromAuth(user, password = null) {
     currentUserData = {
       id: user.uid,
       name: user.displayName || user.email.split('@')[0],
       email: user.email,
       friends: [],
-      binId: user.uid
+      avatar: user.photoURL || null
     };
     
-    // Проверяем, есть ли аккаунт в MockAPI
     let existing = await findAccountByEmail(user.email);
     if (!existing) {
       await createAccount({
@@ -1229,15 +1318,17 @@
         email: user.email,
         password: password,
         friends: [],
+        avatar: currentUserData.avatar,
         binId: user.uid,
         createdAt: new Date().toISOString()
       });
     } else {
       currentUserData.friends = existing.friends || [];
       currentUserData.name = existing.name || currentUserData.name;
+      currentUserData.avatar = existing.avatar || currentUserData.avatar;
     }
     
-    document.getElementById('headerAvatar').textContent = currentUserData.name.charAt(0).toUpperCase();
+    updateHeaderAvatar();
     localStorage.setItem('mismos_license', 'true');
     document.getElementById('licenseScreen').classList.add('hidden');
     document.getElementById('mainInterface').classList.remove('hidden');
@@ -1287,6 +1378,12 @@
     localStorage.removeItem('mismos_license');
     document.getElementById('mainInterface').classList.add('hidden');
     document.getElementById('registerScreen').classList.remove('hidden');
+  });
+  
+  document.getElementById('changeAvatarMenuItem')?.addEventListener('click', () => {
+    closeUserMenu();
+    const newAvatar = prompt('Введите URL новой аватарки:', currentUserData.avatar || '');
+    if (newAvatar && newAvatar.trim()) updateAvatar(newAvatar.trim());
   });
   
   document.getElementById('licenseAcceptBtn')?.addEventListener('click', () => {
@@ -1358,9 +1455,9 @@
             name: existing.name,
             email: existing.email,
             friends: existing.friends || [],
-            binId: existing.binId
+            avatar: existing.avatar || user.photoURL || null
           };
-          document.getElementById('headerAvatar').textContent = currentUserData.name.charAt(0).toUpperCase();
+          updateHeaderAvatar();
         } else {
           await createUserProfileFromAuth(user);
         }
