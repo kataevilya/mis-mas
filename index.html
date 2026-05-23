@@ -645,7 +645,7 @@
   const CHANNEL_API_URL = 'https://69da27d226585bd92dd3a309.mockapi.io/messages';
   const ACCOUNTS_API_PRIMARY = 'https://69f32de6bd2396bf530f862c.mockapi.io/ac';
   const ACCOUNTS_API_SECONDARY = 'https://69f32de6bd2396bf530f862c.mockapi.io/ac2';
-  const IMGBB_API_KEY = 'cfeda5eb6c179902b44ba10cb396cb';
+  const IMGBB_API_KEY = '614175d15985961d996a8c076c776f08';
 
   // ========== FIREBASE AUTH ==========
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
@@ -708,11 +708,10 @@
     else document.body.classList.add('animations-off');
   }
 
-  // ========== ЗАГРУЗКА ФОТО НА IMGBB (ИСПРАВЛЕНА) ==========
+  // ========== ЗАГРУЗКА ФОТО НА IMGBB (НОВЫЙ КЛЮЧ) ==========
   async function uploadToImgBB(file) {
     const formData = new FormData();
     formData.append('image', file);
-    // Используем правильный формат API ключа
     formData.append('key', IMGBB_API_KEY);
     
     try {
@@ -725,19 +724,7 @@
         return data.data.url;
       } else {
         console.error('ImgBB error:', data);
-        // Пробуем альтернативный формат
-        const altFormData = new FormData();
-        altFormData.append('image', file);
-        altFormData.append('key', IMGBB_API_KEY);
-        const altResponse = await fetch('https://api.imgbb.com/1/upload', {
-          method: 'POST',
-          body: altFormData
-        });
-        const altData = await altResponse.json();
-        if (altData.success && altData.data && altData.data.url) {
-          return altData.data.url;
-        }
-        throw new Error('Upload failed: ' + JSON.stringify(altData));
+        throw new Error('Upload failed: ' + (data.error?.message || 'Unknown error'));
       }
     } catch (error) {
       console.error('ImgBB upload error:', error);
